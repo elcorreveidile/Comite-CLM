@@ -67,6 +67,24 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Composición del comité */}
+        <section className="py-16 px-6 max-w-5xl mx-auto">
+          <h2 className="text-xl font-bold mb-8 text-center text-gray-800">Composición del comité</h2>
+          <div className="flex flex-col sm:flex-row justify-center gap-6 max-w-2xl mx-auto">
+            <div className="flex-1 rounded-xl border-2 p-6 text-center" style={{ borderColor: '#C8102E' }}>
+              <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: '#C8102E' }}>CCOO</p>
+              <p className="text-5xl font-bold mb-1" style={{ color: '#C8102E' }}>6</p>
+              <p className="text-sm text-gray-500">representantes</p>
+            </div>
+            <div className="flex-1 rounded-xl border-2 p-6 text-center" style={{ borderColor: '#003087' }}>
+              <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: '#003087' }}>UGT</p>
+              <p className="text-5xl font-bold mb-1" style={{ color: '#003087' }}>3</p>
+              <p className="text-sm text-gray-500">representantes</p>
+            </div>
+          </div>
+          <p className="text-center text-xs text-gray-400 mt-6">9 miembros en total · mandato vigente</p>
+        </section>
+
         {/* Contacto */}
         <section className="bg-gray-50 py-12 px-6">
           <div className="max-w-2xl mx-auto text-center">
