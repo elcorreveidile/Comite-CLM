@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+:root {
+  --clm-azul: #003087;
+  --clm-rojo: #C8102E;
+  --clm-dorado: #F2B705;
+}
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #1a1a1a;
+}
