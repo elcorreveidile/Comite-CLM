@@ -22,15 +22,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const isSuperAdmin = SUPER_ADMINS.includes(user.email ?? '')
 
-  // Contar propuestas pendientes
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-  const { count: pendientes } = await admin
-    .from('propuestas')
-    .select('*', { count: 'exact', head: true })
-    .eq('revisada', false)
+
+  const [
+    { count: pendientes },
+    { data: miembro },
+  ] = await Promise.all([
+    admin.from('propuestas').select('*', { count: 'exact', head: true }).eq('revisada', false),
+    admin.from('miembros_comite').select('cargo').eq('email', user.email!).eq('activo', true).maybeSingle(),
+  ])
+
+  const cargo = miembro?.cargo ?? null
+  const puedeComunicados = isSuperAdmin || cargo === 'Presidenta' || cargo === 'Secretaria'
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -57,6 +63,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                   )}
                 </Link>
                 <Link href="/admin/documentos" className="px-3 py-1.5 rounded hover:bg-zinc-700 transition-colors">Documentos</Link>
+                {puedeComunicados && (
+                  <Link href="/admin/comunicados" className="px-3 py-1.5 rounded hover:bg-zinc-700 transition-colors" style={{ color: '#60a5fa' }}>Comunicados</Link>
+                )}
                 {isSuperAdmin && (
                   <Link href="/admin/miembros" className="px-3 py-1.5 rounded hover:bg-zinc-700 transition-colors" style={{ color: '#F2B705' }}>Miembros</Link>
                 )}
