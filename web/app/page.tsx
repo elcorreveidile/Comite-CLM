@@ -1,32 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-function LogoCCOO({ className = 'h-7 w-auto' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 90 32" className={className} aria-label="CCOO">
-      <rect width="90" height="32" rx="4" fill="#E2001A" />
-      <text x="45" y="23" textAnchor="middle" fill="white" fontSize="15"
-        fontFamily="Arial, Helvetica, sans-serif" fontWeight="bold" letterSpacing="3">
-        cc.oo.
-      </text>
-    </svg>
-  )
-}
-
-function LogoUGT({ className = 'h-9 w-auto' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" className={className} aria-label="UGT">
-      <circle cx="24" cy="24" r="24" fill="#E2001A" />
-      {/* Manos estilizadas */}
-      <path d="M14 26 Q18 20 24 22 Q30 20 34 26 Q30 32 24 30 Q18 32 14 26Z" fill="white" opacity="0.9" />
-      <text x="24" y="44" textAnchor="middle" fill="white" fontSize="10"
-        fontFamily="Arial, Helvetica, sans-serif" fontWeight="bold" letterSpacing="1">
-        UGT
-      </text>
-    </svg>
-  )
-}
-
 const CCOO_MEMBERS = ['Isabel Álvarez', 'Fiona Baird', 'Ramón Barquero', 'M.ª Ángeles Lamolda González', 'África Morales', 'Giorgia Pordenoni']
 const UGT_MEMBERS  = ['Benjamín Prieto', 'Agustina García García', 'Javier Benítez']
 
@@ -68,10 +42,10 @@ export default function Home() {
           </div>
           <div className="relative max-w-3xl mx-auto text-center">
             {/* Logos de sindicatos */}
-            <div className="flex items-center justify-center gap-5 mb-8 opacity-90">
-              <LogoCCOO className="h-8 w-auto" />
+            <div className="flex items-center justify-center gap-5 mb-8">
+              <Image src="/logo-ccoo.jpg" alt="CCOO" width={120} height={40} style={{ height: '2.25rem', width: 'auto' }} className="object-contain drop-shadow-md" />
               <span className="text-white/30 text-2xl font-thin">·</span>
-              <LogoUGT className="h-10 w-auto" />
+              <Image src="/logo-ugt.webp" alt="UGT" width={80} height={48} style={{ height: '2.75rem', width: 'auto' }} className="object-contain drop-shadow-md" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Tu comité de empresa</h2>
             <p className="text-lg opacity-80 mb-8 leading-relaxed">
@@ -116,7 +90,7 @@ export default function Home() {
               {/* CCOO */}
               <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-5 flex items-center justify-between" style={{ backgroundColor: '#fef2f2' }}>
-                  <LogoCCOO className="h-8 w-auto" />
+                  <Image src="/logo-ccoo.jpg" alt="CCOO" width={120} height={40} style={{ height: '2rem', width: 'auto' }} className="object-contain" />
                   <div className="text-right">
                     <span className="text-4xl font-bold" style={{ color: '#E2001A' }}>6</span>
                     <p className="text-xs text-gray-400 leading-none">representantes</p>
@@ -135,7 +109,7 @@ export default function Home() {
               {/* UGT */}
               <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-5 flex items-center justify-between" style={{ backgroundColor: '#fef2f2' }}>
-                  <LogoUGT className="h-10 w-auto" />
+                  <Image src="/logo-ugt.webp" alt="UGT" width={80} height={48} style={{ height: '2.5rem', width: 'auto' }} className="object-contain" />
                   <div className="text-right">
                     <span className="text-4xl font-bold" style={{ color: '#E2001A' }}>3</span>
                     <p className="text-xs text-gray-400 leading-none">representantes</p>
@@ -181,8 +155,8 @@ export default function Home() {
             Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada
           </p>
           <div className="flex items-center gap-4">
-            <LogoCCOO className="h-4 w-auto opacity-50 hover:opacity-100 transition-opacity" />
-            <LogoUGT className="h-5 w-auto opacity-50 hover:opacity-100 transition-opacity" />
+            <Image src="/logo-ccoo.jpg" alt="CCOO" width={60} height={20} style={{ height: '1.1rem', width: 'auto' }} className="object-contain opacity-50 hover:opacity-100 transition-opacity" />
+            <Image src="/logo-ugt.webp" alt="UGT" width={40} height={24} style={{ height: '1.3rem', width: 'auto' }} className="object-contain opacity-50 hover:opacity-100 transition-opacity" />
             <Link href="/admin/login" className="text-xs text-gray-300 hover:text-gray-500 transition-colors ml-2">
               Área del comité
             </Link>
