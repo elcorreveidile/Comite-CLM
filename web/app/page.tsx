@@ -70,7 +70,9 @@ export default function Home() {
         {/* Composición del comité */}
         <section className="py-16 px-6 max-w-5xl mx-auto">
           <h2 className="text-xl font-bold mb-8 text-center text-gray-800">Composición del comité</h2>
-          <div className="flex flex-col sm:flex-row justify-center gap-6 max-w-2xl mx-auto">
+
+          {/* Reparto por sindicato */}
+          <div className="flex flex-col sm:flex-row justify-center gap-6 max-w-2xl mx-auto mb-12">
             <div className="flex-1 rounded-xl border-2 p-6 text-center" style={{ borderColor: '#C8102E' }}>
               <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: '#C8102E' }}>CCOO</p>
               <p className="text-5xl font-bold mb-1" style={{ color: '#C8102E' }}>6</p>
@@ -82,6 +84,30 @@ export default function Home() {
               <p className="text-sm text-gray-500">representantes</p>
             </div>
           </div>
+
+          {/* Lista de miembros */}
+          <div className="max-w-2xl mx-auto">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4 text-center">Miembros</h3>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {[
+                'Benjamín Prieto',
+                'Isabel Álvarez',
+                'Fiona Baird',
+                'Ramón Barquero',
+                'Agustina García García',
+                'Javier Benítez',
+                'M.ª Ángeles Lamolda González',
+                'África Morales',
+                'Giorgia Pordenoni',
+              ].map(nombre => (
+                <div key={nombre} className="flex items-center gap-2 py-2 px-3 rounded-lg bg-gray-50">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                  <span className="text-sm text-gray-700">{nombre}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <p className="text-center text-xs text-gray-400 mt-6">9 miembros en total · mandato vigente</p>
         </section>
 

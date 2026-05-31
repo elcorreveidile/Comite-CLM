@@ -120,3 +120,19 @@ create policy "Lectura autenticada" on documentos for select to authenticated us
 create policy "Escritura autenticada" on documentos for insert to authenticated with check (true);
 create policy "Actualización autenticada" on documentos for update to authenticated using (true);
 create policy "Borrado autenticado" on documentos for delete to authenticated using (true);
+
+
+-- ============================================================
+-- DATOS INICIALES — Miembros del comité de empresa
+-- ============================================================
+insert into trabajadores (nombre, email, notas) values
+  ('Benjamín Prieto',           'benjamin.prieto@clm.ugr.es', 'Miembro del comité'),
+  ('Isabel Álvarez',            'isabel.alvarez@clm.ugr.es',  'Miembro del comité'),
+  ('Fiona Baird',               'fbaird@ugr.es',              'Miembro del comité'),
+  ('Ramón Barquero',            'ramon.barquero@clm.ugr.es',  'Miembro del comité'),
+  ('Agustina García García',    'agustinagg@yahoo.es',        'Miembro del comité'),
+  ('Javier Benítez',            'benitezl@go.ugr.es',         'Miembro del comité'),
+  ('M.ª Ángeles Lamolda González', 'alamolda@ugr.es',         'Miembro del comité'),
+  ('África Morales',            'africam@ugr.es',             'Miembro del comité'),
+  ('Giorgia Pordenoni',         'gpordenoni@ugr.es',          'Miembro del comité')
+on conflict (email) do nothing;
