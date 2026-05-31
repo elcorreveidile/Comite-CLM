@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { ALLOWED_ADMINS } from '@/lib/admins'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
@@ -17,11 +16,6 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return <>{children}</>
-
-  // Los admins van a su panel
-  if (ALLOWED_ADMINS.includes(user.email ?? '')) {
-    redirect('/admin')
-  }
 
   // Verificar que es un trabajador registrado
   const admin = createAdminClient(
