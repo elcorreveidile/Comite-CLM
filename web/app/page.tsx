@@ -135,6 +135,9 @@ export default function Home() {
       {/* Pie de página */}
       <footer className="border-t py-6 px-6 text-center text-xs text-gray-400">
         <p>Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada</p>
+        <p className="mt-2">
+          <Link href="/admin/login" className="text-gray-300 hover:text-gray-500 transition-colors">Área del comité</Link>
+        </p>
       </footer>
     </div>
   )
