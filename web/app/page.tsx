@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import ContactForm from '@/app/components/ContactForm'
 
 const CCOO_MEMBERS: { nombre: string; cargo?: string }[] = [
   { nombre: 'M.ª Ángeles Lamolda González', cargo: 'Presidenta' },
@@ -156,18 +157,14 @@ export default function Home() {
 
         {/* ── Contacto ── */}
         <section className="py-14 px-6 bg-gray-50 border-t border-gray-100">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-xl font-bold mb-2 text-gray-800">¿Necesitas contactar con el comité?</h3>
-            <p className="text-gray-500 text-sm mb-6">
-              Si tienes alguna consulta o necesitas asesoramiento, escríbenos.
-            </p>
-            <a
-              href="mailto:comite@clm.ugr.es"
-              style={{ backgroundColor: '#003087' }}
-              className="inline-block text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
-            >
-              comite@clm.ugr.es
-            </a>
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-bold mb-2 text-gray-800">¿Necesitas contactar con el comité?</h3>
+              <p className="text-gray-500 text-sm">
+                Si tienes alguna consulta o necesitas asesoramiento, escríbenos.
+              </p>
+            </div>
+            <ContactForm />
           </div>
         </section>
 
