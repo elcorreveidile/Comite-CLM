@@ -85,26 +85,29 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Lista de miembros */}
-          <div className="max-w-2xl mx-auto">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4 text-center">Miembros</h3>
-            <div className="grid sm:grid-cols-2 gap-2">
-              {[
-                'Benjamín Prieto',
-                'Isabel Álvarez',
-                'Fiona Baird',
-                'Ramón Barquero',
-                'Agustina García García',
-                'Javier Benítez',
-                'M.ª Ángeles Lamolda González',
-                'África Morales',
-                'Giorgia Pordenoni',
-              ].map(nombre => (
-                <div key={nombre} className="flex items-center gap-2 py-2 px-3 rounded-lg bg-gray-50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
-                  <span className="text-sm text-gray-700">{nombre}</span>
-                </div>
-              ))}
+          {/* Lista de miembros agrupados por sindicato */}
+          <div className="max-w-2xl mx-auto grid sm:grid-cols-2 gap-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-3 pb-1 border-b-2" style={{ color: '#C8102E', borderColor: '#C8102E' }}>CCOO</p>
+              <div className="flex flex-col gap-1">
+                {['Isabel Álvarez', 'Fiona Baird', 'Ramón Barquero', 'M.ª Ángeles Lamolda González', 'África Morales', 'Giorgia Pordenoni'].map(n => (
+                  <div key={n} className="flex items-center gap-2 py-1.5 px-2 rounded">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#C8102E' }} />
+                    <span className="text-sm text-gray-700">{n}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-3 pb-1 border-b-2" style={{ color: '#003087', borderColor: '#003087' }}>UGT</p>
+              <div className="flex flex-col gap-1">
+                {['Benjamín Prieto', 'Agustina García García', 'Javier Benítez'].map(n => (
+                  <div key={n} className="flex items-center gap-2 py-1.5 px-2 rounded">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#003087' }} />
+                    <span className="text-sm text-gray-700">{n}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
