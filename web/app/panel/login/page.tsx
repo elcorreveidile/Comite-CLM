@@ -21,7 +21,7 @@ export default function PanelLoginPage() {
     })
     setLoading(false)
     if (authError) {
-      setError('Error al enviar el enlace. Inténtalo de nuevo.')
+      setError(authError.message)
     } else {
       setSent(true)
     }
