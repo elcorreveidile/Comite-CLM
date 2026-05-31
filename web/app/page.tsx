@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 function LogoCCOO({ className = 'h-7 w-auto' }: { className?: string }) {
   return (
@@ -60,8 +61,12 @@ export default function Home() {
       <main className="flex-1">
 
         {/* ── Hero ── */}
-        <section style={{ backgroundColor: '#003087' }} className="text-white py-20 px-6">
-          <div className="max-w-3xl mx-auto text-center">
+        <section className="relative text-white py-20 px-6 overflow-hidden">
+          <div className="absolute inset-0">
+            <Image src="/patio-clm.jpg" alt="Patio del Centro de Lenguas Modernas" fill className="object-cover object-[center_40%]" priority />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,48,135,0.88) 0%, rgba(0,48,135,0.78) 60%, rgba(0,48,135,0.88) 100%)' }} />
+          </div>
+          <div className="relative max-w-3xl mx-auto text-center">
             {/* Logos de sindicatos */}
             <div className="flex items-center justify-center gap-5 mb-8 opacity-90">
               <LogoCCOO className="h-8 w-auto" />
