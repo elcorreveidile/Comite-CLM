@@ -47,7 +47,7 @@ export default function ContactForm() {
             name="nombre"
             required
             placeholder="Tu nombre"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+            className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-900/30"
           />
         </div>
         <div>
@@ -57,7 +57,7 @@ export default function ContactForm() {
             type="email"
             required
             placeholder="para que podamos responderte"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+            className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-900/30"
           />
         </div>
       </div>
@@ -67,7 +67,7 @@ export default function ContactForm() {
         <input
           name="asunto"
           placeholder="Opcional"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+          className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-900/30"
         />
       </div>
 
@@ -78,7 +78,7 @@ export default function ContactForm() {
           required
           rows={4}
           placeholder="Escribe tu consulta o propuesta..."
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
+          className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
         />
       </div>
 
@@ -90,7 +90,7 @@ export default function ContactForm() {
         type="submit"
         disabled={estado === 'enviando'}
         style={{ backgroundColor: '#003087' }}
-        className="w-full text-white py-2.5 rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+        className="w-full text-white py-3.5 rounded-lg font-medium text-base hover:opacity-90 transition-opacity disabled:opacity-50"
       >
         {estado === 'enviando' ? 'Enviando…' : 'Enviar mensaje'}
       </button>

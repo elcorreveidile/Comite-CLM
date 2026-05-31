@@ -57,14 +57,14 @@ export default function PanelLoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 placeholder="tu.nombre@ugr.es"
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-3 outline-none focus:border-blue-400"
+                className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base mb-3 outline-none focus:border-blue-400"
               />
               {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
               <button
                 type="submit"
                 disabled={loading}
                 style={{ backgroundColor: '#003087' }}
-                className="w-full text-white py-2 rounded text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                className="w-full text-white py-3.5 rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {loading ? 'Enviando...' : 'Enviar enlace de acceso'}
               </button>

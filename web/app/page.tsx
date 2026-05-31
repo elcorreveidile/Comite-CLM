@@ -22,17 +22,17 @@ export default function Home() {
 
       {/* ── Cabecera ── */}
       <header style={{ backgroundColor: '#003087' }} className="text-white shadow-md">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-widest opacity-60">Universidad de Granada</p>
-            <h1 className="text-lg font-semibold leading-tight">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-widest opacity-60 hidden sm:block">Universidad de Granada</p>
+            <h1 className="text-base sm:text-lg font-semibold leading-tight">
               Comité de Empresa
-              <span className="block text-sm font-normal opacity-75">Centro de Lenguas Modernas</span>
+              <span className="block text-xs sm:text-sm font-normal opacity-75">Centro de Lenguas Modernas</span>
             </h1>
           </div>
           <Link
             href="/panel/login"
-            className="text-sm px-4 py-2 rounded border border-white/40 hover:bg-white hover:text-blue-900 transition-colors"
+            className="shrink-0 text-xs sm:text-sm px-3 sm:px-4 py-2 rounded border border-white/40 hover:bg-white hover:text-blue-900 transition-colors whitespace-nowrap"
           >
             Acceso trabajadores
           </Link>
@@ -47,7 +47,7 @@ export default function Home() {
       <main className="flex-1">
 
         {/* ── Hero ── */}
-        <section className="relative text-white py-20 px-6 overflow-hidden">
+        <section className="relative text-white py-14 sm:py-20 px-4 sm:px-6 overflow-hidden">
           <div className="absolute inset-0">
             <Image src="/patio-clm.jpg" alt="Patio del Centro de Lenguas Modernas" fill className="object-cover object-[center_40%]" priority />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,48,135,0.88) 0%, rgba(0,48,135,0.78) 60%, rgba(0,48,135,0.88) 100%)' }} />
@@ -59,8 +59,8 @@ export default function Home() {
               <span className="text-white/30 text-2xl font-thin">·</span>
               <Image src="/logo-ugt.webp" alt="UGT" width={80} height={48} style={{ height: '2.75rem', width: 'auto' }} className="object-contain drop-shadow-md" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Tu comité de empresa</h2>
-            <p className="text-lg opacity-80 mb-8 leading-relaxed">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Tu comité de empresa</h2>
+            <p className="text-base sm:text-lg opacity-80 mb-8 leading-relaxed">
               Representamos a los trabajadores del Centro de Lenguas Modernas de la Universidad de Granada.
               Aquí encontrarás información sobre tus derechos, el convenio colectivo y las actividades del comité.
             </p>

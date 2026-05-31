@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import PanelBottomNav from './PanelBottomNav'
 
 async function signOut() {
   'use server'
@@ -17,7 +18,6 @@ export default async function PanelLayout({ children }: { children: React.ReactN
 
   if (!user) return <>{children}</>
 
-  // Verificar que es un trabajador registrado
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -48,34 +48,43 @@ export default async function PanelLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f8f7f4' }}>
-      <nav className="bg-white border-b shadow-sm">
+      {/* Top nav — visible en escritorio, solo logo+salir en móvil */}
+      <nav className="bg-white border-b shadow-sm sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-5">
-              <Link href="/panel" className="flex items-baseline gap-1 font-bold text-base">
-                <span style={{ color: '#003087' }}>Comité</span>
-                <span className="text-gray-300 font-light text-sm">·</span>
-                <span style={{ color: '#C8102E' }} className="text-sm">CLM</span>
-              </Link>
-              <div className="hidden sm:flex items-center gap-1 text-sm">
-                <Link href="/panel" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Inicio</Link>
-                <Link href="/panel/avisos" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Avisos</Link>
-                <Link href="/panel/votaciones" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Votaciones</Link>
-                <Link href="/panel/calendario" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Calendario</Link>
-                <Link href="/panel/propuestas" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Propuestas</Link>
-                <Link href="/panel/documentos" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Documentos</Link>
-              </div>
+            <Link href="/panel" className="flex items-baseline gap-1 font-bold text-base">
+              <span style={{ color: '#003087' }}>Comité</span>
+              <span className="text-gray-300 font-light text-sm">·</span>
+              <span style={{ color: '#C8102E' }} className="text-sm">CLM</span>
+            </Link>
+
+            {/* Desktop nav links */}
+            <div className="hidden sm:flex items-center gap-1 text-sm">
+              <Link href="/panel"            className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Inicio</Link>
+              <Link href="/panel/avisos"     className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Avisos</Link>
+              <Link href="/panel/votaciones" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Votaciones</Link>
+              <Link href="/panel/calendario" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Calendario</Link>
+              <Link href="/panel/propuestas" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Propuestas</Link>
+              <Link href="/panel/documentos" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Documentos</Link>
             </div>
+
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-400 hidden sm:block truncate max-w-[180px]">{user.email}</span>
-              <form action={signOut}>
+              <form action={signOut} className="hidden sm:block">
                 <button type="submit" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Salir</button>
               </form>
             </div>
           </div>
         </div>
       </nav>
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">{children}</main>
+
+      {/* Contenido con padding inferior extra en móvil para el bottom nav */}
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 pb-24 sm:pb-8">
+        {children}
+      </main>
+
+      {/* Bottom nav — solo en móvil */}
+      <PanelBottomNav onSignOut={signOut} />
     </div>
   )
 }
