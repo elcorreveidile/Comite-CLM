@@ -1,8 +1,19 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-const CCOO_MEMBERS = ['Isabel Álvarez', 'Fiona Baird', 'Ramón Barquero', 'M.ª Ángeles Lamolda González', 'África Morales', 'Giorgia Pordenoni']
-const UGT_MEMBERS  = ['Benjamín Prieto', 'Agustina García García', 'Javier Benítez']
+const CCOO_MEMBERS: { nombre: string; cargo?: string }[] = [
+  { nombre: 'M.ª Ángeles Lamolda González', cargo: 'Presidenta' },
+  { nombre: 'Isabel Álvarez', cargo: 'Secretaria' },
+  { nombre: 'Fiona Baird' },
+  { nombre: 'Ramón Barquero' },
+  { nombre: 'África Morales' },
+  { nombre: 'Giorgia Pordenoni' },
+]
+const UGT_MEMBERS: { nombre: string; cargo?: string }[] = [
+  { nombre: 'Benjamín Prieto' },
+  { nombre: 'Agustina García García' },
+  { nombre: 'Javier Benítez' },
+]
 
 export default function Home() {
   return (
@@ -97,10 +108,17 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="px-6 py-4 bg-white divide-y divide-gray-50">
-                  {CCOO_MEMBERS.map(n => (
-                    <div key={n} className="flex items-center gap-3 py-2">
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#E2001A' }} />
-                      <span className="text-sm text-gray-700">{n}</span>
+                  {CCOO_MEMBERS.map(m => (
+                    <div key={m.nombre} className="flex items-center justify-between py-2">
+                      <div className="flex items-center gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#E2001A' }} />
+                        <span className="text-sm text-gray-700">{m.nombre}</span>
+                      </div>
+                      {m.cargo && (
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full ml-2 shrink-0" style={{ backgroundColor: '#003087', color: 'white' }}>
+                          {m.cargo}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -116,10 +134,17 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="px-6 py-4 bg-white divide-y divide-gray-50">
-                  {UGT_MEMBERS.map(n => (
-                    <div key={n} className="flex items-center gap-3 py-2">
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#E2001A' }} />
-                      <span className="text-sm text-gray-700">{n}</span>
+                  {UGT_MEMBERS.map(m => (
+                    <div key={m.nombre} className="flex items-center justify-between py-2">
+                      <div className="flex items-center gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#E2001A' }} />
+                        <span className="text-sm text-gray-700">{m.nombre}</span>
+                      </div>
+                      {m.cargo && (
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full ml-2 shrink-0" style={{ backgroundColor: '#003087', color: 'white' }}>
+                          {m.cargo}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
