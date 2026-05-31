@@ -1,19 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-
-const ALLOWED_ADMINS = [
-  // UGT
-  'benjamin.prieto@clm.ugr.es',
-  'agustinagg@yahoo.es',
-  'benitezl@go.ugr.es',
-  // CCOO
-  'isabel.alvarez@clm.ugr.es',
-  'fbaird@ugr.es',
-  'ramon.barquero@clm.ugr.es',
-  'alamolda@ugr.es',
-  'africam@ugr.es',
-  'gpordenoni@ugr.es',
-]
+import { SUPER_ADMINS, ALLOWED_ADMINS } from '@/lib/admins'
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -43,12 +30,12 @@ export async function proxy(request: NextRequest) {
   // Admin routes
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin/login') {
-      if (user && ALLOWED_ADMINS.includes(user.email ?? '')) {
+      if (user && await isAdminUser(supabase, user.email ?? '')) {
         return NextResponse.redirect(new URL('/admin', request.url))
       }
       return supabaseResponse
     }
-    if (!user || !ALLOWED_ADMINS.includes(user.email ?? '')) {
+    if (!user || !await isAdminUser(supabase, user.email ?? '')) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
     return supabaseResponse
@@ -69,6 +56,24 @@ export async function proxy(request: NextRequest) {
   }
 
   return supabaseResponse
+}
+
+async function isAdminUser(
+  supabase: ReturnType<typeof createServerClient>,
+  email: string
+): Promise<boolean> {
+  if (SUPER_ADMINS.includes(email)) return true
+  try {
+    const { data } = await supabase
+      .from('miembros_comite')
+      .select('id')
+      .eq('email', email)
+      .eq('activo', true)
+      .maybeSingle()
+    return !!data
+  } catch {
+    return ALLOWED_ADMINS.includes(email)
+  }
 }
 
 export const config = {

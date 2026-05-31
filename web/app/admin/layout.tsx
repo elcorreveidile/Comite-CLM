@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { SUPER_ADMINS } from '@/lib/admins'
 
 async function signOut() {
   'use server'
@@ -18,6 +19,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user) {
     return <>{children}</>
   }
+
+  const isSuperAdmin = SUPER_ADMINS.includes(user.email ?? '')
 
   // Contar propuestas pendientes
   const admin = createAdminClient(
@@ -54,6 +57,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                   )}
                 </Link>
                 <Link href="/admin/documentos" className="px-3 py-1.5 rounded hover:bg-zinc-700 transition-colors">Documentos</Link>
+                {isSuperAdmin && (
+                  <Link href="/admin/miembros" className="px-3 py-1.5 rounded hover:bg-zinc-700 transition-colors" style={{ color: '#F2B705' }}>Miembros</Link>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">
