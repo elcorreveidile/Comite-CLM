@@ -31,11 +31,11 @@ export default function PanelLoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#f8f7f4' }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-baseline gap-1 text-2xl font-bold mb-2">
+          <a href="/" className="inline-flex items-baseline gap-1 text-2xl font-bold mb-2 hover:opacity-80 transition-opacity">
             <span style={{ color: '#003087' }}>Comité</span>
             <span className="text-gray-300 font-light">·</span>
             <span style={{ color: '#C8102E' }}>CLM</span>
-          </div>
+          </a>
           <p className="text-gray-500 text-sm">Panel de trabajadores</p>
           <p className="text-gray-400 text-xs mt-1">Centro de Lenguas Modernas · UGR</p>
         </div>

@@ -36,11 +36,11 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-zinc-900 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-1 text-3xl font-bold mb-1">
+          <a href="/" className="inline-flex items-center gap-1 text-3xl font-bold mb-1 hover:opacity-80 transition-opacity">
             <span style={{ color: '#F2B705' }}>CLM</span>
             <span className="text-white text-lg font-normal">·</span>
             <span style={{ color: '#C8102E' }}>Admin</span>
-          </div>
+          </a>
           <p className="text-zinc-400 text-sm">Panel de administración</p>
           <p className="text-zinc-500 text-xs mt-1">Comité de Empresa · Centro de Lenguas Modernas</p>
         </div>
