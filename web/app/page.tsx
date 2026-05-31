@@ -1,16 +1,46 @@
 import Link from 'next/link'
 
+function LogoCCOO({ className = 'h-7 w-auto' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 90 32" className={className} aria-label="CCOO">
+      <rect width="90" height="32" rx="4" fill="#E2001A" />
+      <text x="45" y="23" textAnchor="middle" fill="white" fontSize="15"
+        fontFamily="Arial, Helvetica, sans-serif" fontWeight="bold" letterSpacing="3">
+        cc.oo.
+      </text>
+    </svg>
+  )
+}
+
+function LogoUGT({ className = 'h-9 w-auto' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" className={className} aria-label="UGT">
+      <circle cx="24" cy="24" r="24" fill="#E2001A" />
+      {/* Manos estilizadas */}
+      <path d="M14 26 Q18 20 24 22 Q30 20 34 26 Q30 32 24 30 Q18 32 14 26Z" fill="white" opacity="0.9" />
+      <text x="24" y="44" textAnchor="middle" fill="white" fontSize="10"
+        fontFamily="Arial, Helvetica, sans-serif" fontWeight="bold" letterSpacing="1">
+        UGT
+      </text>
+    </svg>
+  )
+}
+
+const CCOO_MEMBERS = ['Isabel Álvarez', 'Fiona Baird', 'Ramón Barquero', 'M.ª Ángeles Lamolda González', 'África Morales', 'Giorgia Pordenoni']
+const UGT_MEMBERS  = ['Benjamín Prieto', 'Agustina García García', 'Javier Benítez']
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      {/* Cabecera */}
-      <header style={{ backgroundColor: '#003087' }} className="text-white shadow">
+
+      {/* ── Cabecera ── */}
+      <header style={{ backgroundColor: '#003087' }} className="text-white shadow-md">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest opacity-70">Universidad de Granada</p>
+            <p className="text-xs uppercase tracking-widest opacity-60">Universidad de Granada</p>
             <h1 className="text-lg font-semibold leading-tight">
               Comité de Empresa
-              <span className="block text-sm font-normal opacity-80">Centro de Lenguas Modernas</span>
+              <span className="block text-sm font-normal opacity-75">Centro de Lenguas Modernas</span>
             </h1>
           </div>
           <Link
@@ -20,125 +50,141 @@ export default function Home() {
             Acceso trabajadores
           </Link>
         </div>
+        {/* Franja de colores sindicales */}
+        <div className="flex h-1">
+          <div className="flex-1" style={{ backgroundColor: '#E2001A' }} />
+          <div className="flex-1" style={{ backgroundColor: '#E2001A', opacity: 0.7 }} />
+        </div>
       </header>
 
-      {/* Hero */}
       <main className="flex-1">
+
+        {/* ── Hero ── */}
         <section style={{ backgroundColor: '#003087' }} className="text-white py-20 px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Tu comité de empresa
-            </h2>
+            {/* Logos de sindicatos */}
+            <div className="flex items-center justify-center gap-5 mb-8 opacity-90">
+              <LogoCCOO className="h-8 w-auto" />
+              <span className="text-white/30 text-2xl font-thin">·</span>
+              <LogoUGT className="h-10 w-auto" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Tu comité de empresa</h2>
             <p className="text-lg opacity-80 mb-8 leading-relaxed">
               Representamos a los trabajadores del Centro de Lenguas Modernas de la Universidad de Granada.
               Aquí encontrarás información sobre tus derechos, el convenio colectivo y las actividades del comité.
             </p>
             <Link
               href="/panel/login"
-              style={{ backgroundColor: '#F2B705', color: '#003087' }}
               className="inline-block px-8 py-3 rounded font-semibold hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#E2001A', color: 'white' }}
             >
               Entrar al panel de trabajadores
             </Link>
           </div>
         </section>
 
-        {/* Secciones informativas */}
-        <section className="py-16 px-6 max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="border-l-4 pl-4" style={{ borderColor: '#003087' }}>
-              <h3 className="font-bold text-lg mb-2">Avisos y noticias</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Mantente informado sobre las novedades, acuerdos y comunicaciones del comité de empresa.
-              </p>
-            </div>
-            <div className="border-l-4 pl-4" style={{ borderColor: '#C8102E' }}>
-              <h3 className="font-bold text-lg mb-2">Votaciones</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Participa en las votaciones y consultas que el comité abre a los trabajadores del centro.
-              </p>
-            </div>
-            <div className="border-l-4 pl-4" style={{ borderColor: '#F2B705' }}>
-              <h3 className="font-bold text-lg mb-2">Propuestas</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Envía tus propuestas y sugerencias directamente al comité de empresa.
-              </p>
+        {/* ── Qué encontrarás ── */}
+        <section className="py-16 px-6 bg-gray-50">
+          <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
+            {[
+              { icon: '📋', title: 'Avisos y noticias',  desc: 'Novedades, acuerdos y comunicaciones del comité.' },
+              { icon: '🗳️', title: 'Votaciones',         desc: 'Participa en las consultas abiertas a los trabajadores.' },
+              { icon: '💬', title: 'Propuestas',          desc: 'Envía tus propuestas directamente al comité.' },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+                <span className="text-3xl mb-3 block">{icon}</span>
+                <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Composición del comité ── */}
+        <section className="py-16 px-6">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Composición del comité</h2>
+            <p className="text-center text-gray-400 text-sm mb-10">9 representantes elegidos · mandato vigente</p>
+
+            <div className="grid sm:grid-cols-2 gap-6">
+
+              {/* CCOO */}
+              <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-5 flex items-center justify-between" style={{ backgroundColor: '#fef2f2' }}>
+                  <LogoCCOO className="h-8 w-auto" />
+                  <div className="text-right">
+                    <span className="text-4xl font-bold" style={{ color: '#E2001A' }}>6</span>
+                    <p className="text-xs text-gray-400 leading-none">representantes</p>
+                  </div>
+                </div>
+                <div className="px-6 py-4 bg-white divide-y divide-gray-50">
+                  {CCOO_MEMBERS.map(n => (
+                    <div key={n} className="flex items-center gap-3 py-2">
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#E2001A' }} />
+                      <span className="text-sm text-gray-700">{n}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* UGT */}
+              <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-5 flex items-center justify-between" style={{ backgroundColor: '#fef2f2' }}>
+                  <LogoUGT className="h-10 w-auto" />
+                  <div className="text-right">
+                    <span className="text-4xl font-bold" style={{ color: '#E2001A' }}>3</span>
+                    <p className="text-xs text-gray-400 leading-none">representantes</p>
+                  </div>
+                </div>
+                <div className="px-6 py-4 bg-white divide-y divide-gray-50">
+                  {UGT_MEMBERS.map(n => (
+                    <div key={n} className="flex items-center gap-3 py-2">
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#E2001A' }} />
+                      <span className="text-sm text-gray-700">{n}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
 
-        {/* Composición del comité */}
-        <section className="py-16 px-6 max-w-5xl mx-auto">
-          <h2 className="text-xl font-bold mb-8 text-center text-gray-800">Composición del comité</h2>
-
-          {/* Reparto por sindicato */}
-          <div className="flex flex-col sm:flex-row justify-center gap-6 max-w-2xl mx-auto mb-12">
-            <div className="flex-1 rounded-xl border-2 p-6 text-center" style={{ borderColor: '#C8102E' }}>
-              <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: '#C8102E' }}>CCOO</p>
-              <p className="text-5xl font-bold mb-1" style={{ color: '#C8102E' }}>6</p>
-              <p className="text-sm text-gray-500">representantes</p>
-            </div>
-            <div className="flex-1 rounded-xl border-2 p-6 text-center" style={{ borderColor: '#003087' }}>
-              <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: '#003087' }}>UGT</p>
-              <p className="text-5xl font-bold mb-1" style={{ color: '#003087' }}>3</p>
-              <p className="text-sm text-gray-500">representantes</p>
-            </div>
-          </div>
-
-          {/* Lista de miembros agrupados por sindicato */}
-          <div className="max-w-2xl mx-auto grid sm:grid-cols-2 gap-6">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-3 pb-1 border-b-2" style={{ color: '#C8102E', borderColor: '#C8102E' }}>CCOO</p>
-              <div className="flex flex-col gap-1">
-                {['Isabel Álvarez', 'Fiona Baird', 'Ramón Barquero', 'M.ª Ángeles Lamolda González', 'África Morales', 'Giorgia Pordenoni'].map(n => (
-                  <div key={n} className="flex items-center gap-2 py-1.5 px-2 rounded">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#C8102E' }} />
-                    <span className="text-sm text-gray-700">{n}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-3 pb-1 border-b-2" style={{ color: '#003087', borderColor: '#003087' }}>UGT</p>
-              <div className="flex flex-col gap-1">
-                {['Benjamín Prieto', 'Agustina García García', 'Javier Benítez'].map(n => (
-                  <div key={n} className="flex items-center gap-2 py-1.5 px-2 rounded">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#003087' }} />
-                    <span className="text-sm text-gray-700">{n}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <p className="text-center text-xs text-gray-400 mt-6">9 miembros en total · mandato vigente</p>
-        </section>
-
-        {/* Contacto */}
-        <section className="bg-gray-50 py-12 px-6">
+        {/* ── Contacto ── */}
+        <section className="py-14 px-6 bg-gray-50 border-t border-gray-100">
           <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-xl font-bold mb-3">¿Necesitas contactar con el comité?</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-xl font-bold mb-2 text-gray-800">¿Necesitas contactar con el comité?</h3>
+            <p className="text-gray-500 text-sm mb-6">
               Si tienes alguna consulta o necesitas asesoramiento, escríbenos.
             </p>
             <a
               href="mailto:comite@clm.ugr.es"
               style={{ backgroundColor: '#003087' }}
-              className="inline-block text-white px-6 py-3 rounded font-medium hover:opacity-90 transition-opacity"
+              className="inline-block text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
             >
               comite@clm.ugr.es
             </a>
           </div>
         </section>
+
       </main>
 
-      {/* Pie de página */}
-      <footer className="border-t py-6 px-6 text-center text-xs text-gray-400">
-        <p>Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada</p>
-        <p className="mt-2">
-          <Link href="/admin/login" className="text-gray-300 hover:text-gray-500 transition-colors">Área del comité</Link>
-        </p>
+      {/* ── Pie de página ── */}
+      <footer className="border-t py-6 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-400 text-center sm:text-left">
+            Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada
+          </p>
+          <div className="flex items-center gap-4">
+            <LogoCCOO className="h-4 w-auto opacity-50 hover:opacity-100 transition-opacity" />
+            <LogoUGT className="h-5 w-auto opacity-50 hover:opacity-100 transition-opacity" />
+            <Link href="/admin/login" className="text-xs text-gray-300 hover:text-gray-500 transition-colors ml-2">
+              Área del comité
+            </Link>
+          </div>
+        </div>
       </footer>
+
     </div>
   )
 }
