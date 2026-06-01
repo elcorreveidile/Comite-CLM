@@ -131,6 +131,14 @@ export default function ManualPage() {
 
       <div className="bg-white text-gray-900 max-w-3xl mx-auto px-6 py-10 print:px-0 print:py-0">
 
+        {/* ── VOLVER AL INICIO ── */}
+        <div className="print:hidden mb-6">
+          <a href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Volver a la página principal
+          </a>
+        </div>
+
         {/* ── PORTADA ── */}
         <Portada />
 
