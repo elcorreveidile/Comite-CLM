@@ -39,7 +39,7 @@ type DestinatarioTipo = 'todos' | 'comite' | 'especifico'
 
 async function resolverEmails(tipo: DestinatarioTipo, emailEspecifico?: string): Promise<{ emails: string[]; error?: string }> {
   if (tipo === 'todos') {
-    const { data } = await adminDb().from('trabajadores').select('email').eq('activo', true)
+    const { data } = await adminDb().from('trabajadores').select('email')
     const emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
     if (!emails.length) return { emails: [], error: 'No hay trabajadores activos registrados.' }
     return { emails }

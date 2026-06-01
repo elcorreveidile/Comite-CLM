@@ -19,7 +19,7 @@ export default async function ComunicadosPage() {
 
   const [{ data: todos }, { data: trabajadores }] = await Promise.all([
     admin.from('comunicados').select('*').order('created_at', { ascending: false }),
-    admin.from('trabajadores').select('id, nombre, email').eq('activo', true).order('nombre'),
+    admin.from('trabajadores').select('id, nombre, email').order('nombre'),
   ])
 
   const pendientes = (todos ?? []).filter((c: any) => c.estado === 'pendiente_aprobacion')
