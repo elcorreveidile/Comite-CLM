@@ -35,10 +35,39 @@ export async function getRole(email: string): Promise<'superadmin' | 'presidenta
   return null
 }
 
-async function enviarEmails(asunto: string, cuerpo: string): Promise<{ ok: boolean; count?: number; error?: string }> {
-  const { data: trabajadores } = await adminDb().from('trabajadores').select('email').eq('activo', true)
-  const emails = (trabajadores ?? []).map((t: any) => t.email).filter(Boolean) as string[]
-  if (!emails.length) return { ok: false, error: 'No hay trabajadores activos registrados.' }
+type DestinatarioTipo = 'todos' | 'comite' | 'especifico'
+
+async function resolverEmails(tipo: DestinatarioTipo, emailEspecifico?: string): Promise<{ emails: string[]; error?: string }> {
+  if (tipo === 'todos') {
+    const { data } = await adminDb().from('trabajadores').select('email').eq('activo', true)
+    const emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
+    if (!emails.length) return { emails: [], error: 'No hay trabajadores activos registrados.' }
+    return { emails }
+  }
+
+  if (tipo === 'comite') {
+    const { data } = await adminDb().from('miembros_comite').select('email').eq('activo', true)
+    const emails = (data ?? []).map((m: any) => m.email).filter(Boolean) as string[]
+    if (!emails.length) return { emails: [], error: 'No hay miembros del comité activos registrados.' }
+    return { emails }
+  }
+
+  if (tipo === 'especifico') {
+    if (!emailEspecifico) return { emails: [], error: 'Debes seleccionar un destinatario.' }
+    return { emails: [emailEspecifico] }
+  }
+
+  return { emails: [], error: 'Tipo de destinatario no válido.' }
+}
+
+async function enviarEmails(
+  asunto: string,
+  cuerpo: string,
+  tipo: DestinatarioTipo,
+  emailEspecifico?: string,
+): Promise<{ ok: boolean; count?: number; error?: string }> {
+  const { emails, error } = await resolverEmails(tipo, emailEspecifico)
+  if (error || !emails.length) return { ok: false, error: error ?? 'Sin destinatarios.' }
 
   const htmlBody = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
@@ -53,18 +82,29 @@ async function enviarEmails(asunto: string, cuerpo: string): Promise<{ ok: boole
       </p>
     </div>`
 
+  if (tipo === 'especifico') {
+    const { error: resendErr } = await resend.emails.send({
+      from: 'Comité CLM <no-reply@comiteclm.com>',
+      to:   emails[0],
+      subject: asunto,
+      html: htmlBody,
+    })
+    if (resendErr) return { ok: false, error: 'Error al enviar el comunicado. Contacta con soporte.' }
+    return { ok: true, count: 1 }
+  }
+
   // Enviar en bloques de 50 (límite seguro de BCC)
   const CHUNK = 50
   for (let i = 0; i < emails.length; i += CHUNK) {
     const chunk = emails.slice(i, i + CHUNK)
-    const { error } = await resend.emails.send({
+    const { error: resendErr } = await resend.emails.send({
       from: 'Comité CLM <no-reply@comiteclm.com>',
       to:   'no-reply@comiteclm.com',
       bcc:  chunk,
       subject: asunto,
       html: htmlBody,
     })
-    if (error) return { ok: false, error: 'Error al enviar el comunicado. Contacta con soporte.' }
+    if (resendErr) return { ok: false, error: 'Error al enviar el comunicado. Contacta con soporte.' }
   }
 
   return { ok: true, count: emails.length }
@@ -79,8 +119,11 @@ export async function crearYEnviar(formData: FormData) {
   if (role !== 'superadmin' && role !== 'presidenta')
     return { ok: false, error: 'No tienes permiso para enviar directamente.' }
 
-  const asunto = String(formData.get('asunto') ?? '').trim().slice(0, 300)
-  const cuerpo = String(formData.get('cuerpo') ?? '').trim().slice(0, 20000)
+  const asunto          = String(formData.get('asunto')           ?? '').trim().slice(0, 300)
+  const cuerpo          = String(formData.get('cuerpo')           ?? '').trim().slice(0, 20000)
+  const tipo            = String(formData.get('destinatario_tipo') ?? 'todos') as DestinatarioTipo
+  const emailEspecifico = String(formData.get('destinatario_email') ?? '').trim() || undefined
+
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
 
   const { data: com, error: dbErr } = await adminDb()
@@ -89,7 +132,7 @@ export async function crearYEnviar(formData: FormData) {
     .select('id').single()
   if (dbErr || !com) return { ok: false, error: 'Error al guardar el comunicado.' }
 
-  const result = await enviarEmails(asunto, cuerpo)
+  const result = await enviarEmails(asunto, cuerpo, tipo, emailEspecifico)
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({
@@ -137,7 +180,7 @@ export async function aprobarYEnviar(id: string) {
     .from('comunicados').select('asunto, cuerpo').eq('id', id).single()
   if (!com) return { ok: false, error: 'Comunicado no encontrado.' }
 
-  const result = await enviarEmails(com.asunto, com.cuerpo)
+  const result = await enviarEmails(com.asunto, com.cuerpo, 'todos')
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({

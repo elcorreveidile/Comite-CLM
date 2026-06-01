@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
+type DestinatarioTipo = 'todos' | 'comite' | 'especifico'
+
+type Trabajador = { id: string; nombre: string; email: string }
 
 type Comunicado = {
   id: string
@@ -68,7 +71,7 @@ function ComunicadoCard({ com, role }: { com: Comunicado; role: Role }) {
           {' · '}{com.creado_por}
         </span>
         {com.estado === 'enviado' && com.destinatarios_count && (
-          <span>{com.destinatarios_count} destinatarios</span>
+          <span>{com.destinatarios_count} {com.destinatarios_count === 1 ? 'destinatario' : 'destinatarios'}</span>
         )}
       </div>
 
@@ -97,9 +100,16 @@ function ComunicadoCard({ com, role }: { com: Comunicado; role: Role }) {
   )
 }
 
-function NuevoComunicadoForm({ role }: { role: Role }) {
-  const [estado, setEstado] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
-  const [msg, setMsg]       = useState('')
+const DESTINATARIO_OPTS: { value: DestinatarioTipo; label: string; desc: string }[] = [
+  { value: 'todos',      label: 'Todos los trabajadores',  desc: 'Se envía a todos los trabajadores activos en el sistema.' },
+  { value: 'comite',     label: 'Miembros del comité',     desc: 'Solo llega a los miembros activos del comité de empresa.' },
+  { value: 'especifico', label: 'Trabajador específico',   desc: 'Elige un único destinatario de la lista de trabajadores.' },
+]
+
+function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores: Trabajador[] }) {
+  const [estado, setEstado]         = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
+  const [msg, setMsg]               = useState('')
+  const [tipo, setTipo]             = useState<DestinatarioTipo>('todos')
 
   const canSendDirect = role === 'superadmin' || role === 'presidenta'
 
@@ -111,11 +121,15 @@ function NuevoComunicadoForm({ role }: { role: Role }) {
     const res = canSendDirect ? await crearYEnviar(data) : await solicitarAprobacion(data)
 
     if (res.ok) {
+      const count = (res as any).count
       setMsg(canSendDirect
-        ? `✅ Enviado correctamente a ${(res as any).count} trabajadores`
+        ? count === 1
+          ? '✅ Enviado correctamente a 1 destinatario'
+          : `✅ Enviado correctamente a ${count} destinatarios`
         : '✅ Solicitud enviada. La Presidenta recibirá el comunicado para aprobación.')
       setEstado('ok')
       ;(e.target as HTMLFormElement).reset()
+      setTipo('todos')
     } else {
       setMsg(`❌ ${res.error}`)
       setEstado('error')
@@ -125,7 +139,7 @@ function NuevoComunicadoForm({ role }: { role: Role }) {
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm mb-8">
       <h2 className="font-bold text-gray-800 mb-5">
-        {canSendDirect ? 'Nuevo comunicado a todos los trabajadores' : 'Redactar comunicado (requiere aprobación de la Presidenta)'}
+        {canSendDirect ? 'Nuevo comunicado' : 'Redactar comunicado (requiere aprobación de la Presidenta)'}
       </h2>
 
       {estado === 'ok' ? (
@@ -137,6 +151,51 @@ function NuevoComunicadoForm({ role }: { role: Role }) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+
+          {/* Selector de destinatario — solo para roles con envío directo */}
+          {canSendDirect && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-2">Destinatarios *</label>
+              <input type="hidden" name="destinatario_tipo" value={tipo} />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {DESTINATARIO_OPTS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setTipo(opt.value)}
+                    className={`text-left px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+                      tipo === opt.value
+                        ? 'border-blue-900 bg-blue-50 text-blue-900'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="font-medium block">{opt.label}</span>
+                    <span className="text-xs text-gray-400 leading-tight block mt-0.5">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+
+              {tipo === 'especifico' && (
+                <div className="mt-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Selecciona el trabajador *</label>
+                  <select
+                    name="destinatario_email"
+                    required
+                    defaultValue=""
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 bg-white"
+                  >
+                    <option value="" disabled>— Elige un trabajador —</option>
+                    {trabajadores.map(t => (
+                      <option key={t.id} value={t.email}>
+                        {t.nombre} ({t.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Asunto *</label>
             <input
@@ -168,7 +227,9 @@ function NuevoComunicadoForm({ role }: { role: Role }) {
             {estado === 'loading'
               ? 'Procesando…'
               : canSendDirect
-                ? '📨 Enviar a todos los trabajadores'
+                ? tipo === 'todos'    ? '📨 Enviar a todos los trabajadores'
+                : tipo === 'comite'   ? '📨 Enviar a los miembros del comité'
+                :                      '📨 Enviar al trabajador seleccionado'
                 : '📤 Solicitar aprobación a la Presidenta'}
           </button>
 
@@ -187,16 +248,18 @@ export default function ComunicadosManager({
   role,
   pendientes,
   historial,
+  trabajadores,
 }: {
   role: Role
   pendientes: Comunicado[]
   historial: Comunicado[]
+  trabajadores: Trabajador[]
 }) {
   const canApprove = role === 'presidenta' || role === 'superadmin'
 
   return (
     <div>
-      <NuevoComunicadoForm role={role} />
+      <NuevoComunicadoForm role={role} trabajadores={trabajadores} />
 
       {canApprove && pendientes.length > 0 && (
         <div className="mb-8">
