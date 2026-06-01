@@ -454,7 +454,7 @@ export default function ManualPage() {
             </tr></thead>
             <tbody className="divide-y divide-gray-100">
               {[
-                ['Secretario/a General (superadmin)', 'Sí', 'Sí', 'Sí'],
+                ['Administrador web (superadmin)', 'Sí', 'Sí', 'Sí'],
                 ['Presidenta', 'Sí', 'Sí', 'Sí'],
                 ['Secretaria', 'Sí', 'No — requiere aprobación', 'No'],
                 ['Resto de miembros', 'No', 'No', 'No'],
@@ -469,7 +469,7 @@ export default function ManualPage() {
             </tbody>
           </table>
         </div>
-        <H4>Flujo para el Secretario/a General de la sección sindical, o la Presidenta cuando no exista sección sindical constituida</H4>
+        <H4>Flujo para el Administrador web o la Presidenta</H4>
         <Step n={1} title="Redacta el comunicado">Escribe el asunto y el cuerpo (máx. 20 000 caracteres).</Step>
         <Step n={2} title="Haz clic en «Enviar a todos los trabajadores»">El sistema envía el correo y registra el comunicado como enviado.</Step>
         <H4>Flujo para la Secretaria</H4>
@@ -487,7 +487,7 @@ export default function ManualPage() {
 
         <H3 id="p2-miembros">10. Gestión de miembros del comité</H3>
         <p className="text-gray-600 text-sm leading-relaxed mb-3">
-          Accesible <strong>únicamente para el Secretario/a General de la sección sindical, o la Presidenta cuando no exista sección sindical constituida (superadministrador)</strong>.
+          Accesible <strong>únicamente para el Administrador web (superadministrador)</strong>.
           Permite gestionar quién tiene acceso al área de administración y qué cargo desempeña.
         </p>
         <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mb-4">
