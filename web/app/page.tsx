@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import ContactForm from '@/app/components/ContactForm'
+import CookieBanner from '@/app/components/CookieBanner'
 
 const CCOO_MEMBERS: { nombre: string; cargo?: string }[] = [
   { nombre: 'M.ª Ángeles Lamolda González', cargo: 'Presidenta' },
@@ -171,11 +172,18 @@ export default function Home() {
       </main>
 
       {/* ── Pie de página ── */}
-      <footer className="border-t py-6 px-6">
+      <footer className="border-t py-8 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-400 text-center sm:text-left">
-            Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada
-          </p>
+          <div className="text-center sm:text-left">
+            <p className="text-xs text-gray-400">
+              Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada
+            </p>
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-2">
+              <Link href="/aviso-legal"  className="text-xs text-gray-300 hover:text-gray-500 transition-colors">Aviso legal</Link>
+              <Link href="/privacidad"   className="text-xs text-gray-300 hover:text-gray-500 transition-colors">Privacidad</Link>
+              <Link href="/cookies"      className="text-xs text-gray-300 hover:text-gray-500 transition-colors">Cookies</Link>
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             <Image src="/logo-ccoo.jpg" alt="CCOO" width={60} height={20} style={{ height: '1.1rem', width: 'auto' }} className="object-contain opacity-50 hover:opacity-100 transition-opacity" />
             <Image src="/logo-ugt.webp" alt="UGT" width={40} height={24} style={{ height: '1.3rem', width: 'auto' }} className="object-contain opacity-50 hover:opacity-100 transition-opacity" />
@@ -187,5 +195,7 @@ export default function Home() {
       </footer>
 
     </div>
+
+    <CookieBanner />
   )
 }

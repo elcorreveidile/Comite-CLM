@@ -70,6 +70,10 @@ export default function PanelLoginPage() {
               </button>
             </form>
             <p className="text-xs text-gray-300 text-center mt-4">Solo para trabajadores del CLM</p>
+            <p className="text-xs text-gray-300 text-center mt-2 leading-relaxed">
+              Al acceder acepta el tratamiento de su correo según nuestra{' '}
+              <a href="/privacidad" className="underline hover:text-gray-500">política de privacidad</a>.
+            </p>
           </div>
         )}
       </div>
