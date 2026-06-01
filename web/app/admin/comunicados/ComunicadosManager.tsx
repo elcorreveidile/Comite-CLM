@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
@@ -106,6 +106,88 @@ const DESTINATARIO_OPTS: { value: DestinatarioTipo; label: string; desc: string 
   { value: 'especifico', label: 'Trabajador específico',   desc: 'Elige un único destinatario de la lista de trabajadores.' },
 ]
 
+function BuscadorTrabajador({ trabajadores }: { trabajadores: Trabajador[] }) {
+  const [query, setQuery]       = useState('')
+  const [open, setOpen]         = useState(false)
+  const [selected, setSelected] = useState<Trabajador | null>(null)
+  const containerRef            = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  const filtered = (query.trim().length === 0 ? trabajadores : trabajadores.filter(t =>
+    t.nombre.toLowerCase().includes(query.toLowerCase()) ||
+    t.email.toLowerCase().includes(query.toLowerCase())
+  )).slice(0, 12)
+
+  function select(t: Trabajador) {
+    setSelected(t)
+    setQuery('')
+    setOpen(false)
+  }
+
+  function clear() {
+    setSelected(null)
+    setQuery('')
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <input type="hidden" name="destinatario_email" value={selected?.email ?? ''} />
+      <div className="relative">
+        <input
+          type="text"
+          value={selected ? `${selected.nombre} (${selected.email})` : query}
+          onChange={e => { setQuery(e.target.value); setSelected(null); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          placeholder="Escribe nombre o email para buscar…"
+          autoComplete="off"
+          className={`w-full border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 ${
+            selected ? 'border-blue-900 bg-blue-50 text-blue-900 font-medium' : 'border-gray-200'
+          }`}
+        />
+        {selected && (
+          <button
+            type="button"
+            onClick={clear}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-lg leading-none"
+            title="Limpiar selección"
+          >×</button>
+        )}
+      </div>
+
+      {open && !selected && (
+        <ul className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <li className="px-3 py-3 text-sm text-gray-400 text-center">Sin resultados</li>
+          ) : filtered.map(t => (
+            <li
+              key={t.id}
+              onMouseDown={() => select(t)}
+              className="px-3 py-2 cursor-pointer hover:bg-blue-50 flex flex-col border-b border-gray-50 last:border-0"
+            >
+              <span className="font-medium text-gray-800 text-sm">{t.nombre}</span>
+              <span className="text-xs text-gray-400">{t.email}</span>
+            </li>
+          ))}
+          {trabajadores.length > 12 && query.trim().length === 0 && (
+            <li className="px-3 py-2 text-xs text-gray-400 text-center bg-gray-50">
+              Escribe para filtrar — {trabajadores.length} trabajadores en total
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores: Trabajador[] }) {
   const [estado, setEstado]         = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [msg, setMsg]               = useState('')
@@ -115,8 +197,13 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setEstado('loading')
     const data = new FormData(e.currentTarget)
+    if (tipo === 'especifico' && !data.get('destinatario_email')) {
+      setMsg('❌ Debes seleccionar un trabajador de la lista.')
+      setEstado('error')
+      return
+    }
+    setEstado('loading')
 
     const res = canSendDirect ? await crearYEnviar(data) : await solicitarAprobacion(data)
 
@@ -177,20 +264,8 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
 
               {tipo === 'especifico' && (
                 <div className="mt-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Selecciona el trabajador *</label>
-                  <select
-                    name="destinatario_email"
-                    required
-                    defaultValue=""
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 bg-white"
-                  >
-                    <option value="" disabled>— Elige un trabajador —</option>
-                    {trabajadores.map(t => (
-                      <option key={t.id} value={t.email}>
-                        {t.nombre} ({t.email})
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Buscar trabajador *</label>
+                  <BuscadorTrabajador trabajadores={trabajadores} />
                 </div>
               )}
             </div>
