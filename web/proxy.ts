@@ -2,7 +2,42 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { SUPER_ADMINS } from '@/lib/admins'
 
+// Paths commonly scanned by automated attack tools and bots
+const SCAN_PATHS = [
+  '/wp-admin', '/wp-login', '/wp-login.php', '/wordpress',
+  '/phpmyadmin', '/pma', '/adminer', '/myadmin',
+  '/xmlrpc.php', '/config.php', '/admin.php', '/login.php',
+  '/shell.php', '/cmd.php', '/c99.php', '/r57.php', '/alfa.php',
+  '/backup', '/db_backup', '/sql', '/dump',
+  '/administrator', '/joomla', '/drupal', '/typo3',
+  '/cgi-bin', '/setup.php', '/install.php', '/update.php',
+]
+
+function isScanPath(pathname: string): boolean {
+  return SCAN_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
+}
+
+function probeRedirect(request: NextRequest): NextResponse {
+  const probes = parseInt(request.cookies.get('_pa')?.value ?? '0')
+  const dest = probes >= 2 ? '/reincidente' : '/intento'
+  const res = NextResponse.redirect(new URL(dest, request.url))
+  res.cookies.set('_pa', String(probes + 1), {
+    httpOnly: true,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 60 * 60 * 24,
+  })
+  return res
+}
+
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Intercept known attack/scanning paths before Vercel's own error handling
+  if (isScanPath(pathname)) {
+    return probeRedirect(request)
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -25,7 +60,6 @@ export async function proxy(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const pathname = request.nextUrl.pathname
 
   // Admin routes
   if (pathname.startsWith('/admin')) {
@@ -36,17 +70,7 @@ export async function proxy(request: NextRequest) {
       return supabaseResponse
     }
     if (!user || !await isAdminUser(supabase, user.email ?? '')) {
-      // Track unauthorized probe attempts and show progressively funnier responses
-      const probes = parseInt(request.cookies.get('_pa')?.value ?? '0')
-      const dest = probes >= 2 ? '/reincidente' : '/intento'
-      const res = NextResponse.redirect(new URL(dest, request.url))
-      res.cookies.set('_pa', String(probes + 1), {
-        httpOnly: true,
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 60 * 60 * 24, // 24 h
-      })
-      return res
+      return probeRedirect(request)
     }
     return supabaseResponse
   }
@@ -88,5 +112,30 @@ async function isAdminUser(
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/panel/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/panel/:path*',
+    // Attack scan paths — intercepted before Vercel's own 403
+    '/wp-admin/:path*', '/wp-admin',
+    '/wp-login.php', '/wp-login',
+    '/wordpress/:path*', '/wordpress',
+    '/phpmyadmin/:path*', '/phpmyadmin',
+    '/pma/:path*', '/pma',
+    '/adminer/:path*', '/adminer',
+    '/myadmin/:path*', '/myadmin',
+    '/xmlrpc.php',
+    '/config.php',
+    '/admin.php',
+    '/login.php',
+    '/shell.php', '/cmd.php', '/c99.php', '/r57.php', '/alfa.php',
+    '/backup/:path*', '/backup',
+    '/db_backup/:path*', '/db_backup',
+    '/sql/:path*', '/sql',
+    '/administrator/:path*', '/administrator',
+    '/joomla/:path*', '/joomla',
+    '/drupal/:path*', '/drupal',
+    '/typo3/:path*', '/typo3',
+    '/cgi-bin/:path*', '/cgi-bin',
+    '/setup.php', '/install.php', '/update.php',
+  ],
 }
