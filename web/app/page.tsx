@@ -19,6 +19,7 @@ const UGT_MEMBERS: { nombre: string; cargo?: string }[] = [
 
 export default function Home() {
   return (
+    <>
     <div className="flex flex-col min-h-screen bg-white">
 
       {/* ── Cabecera ── */}
@@ -195,7 +196,7 @@ export default function Home() {
       </footer>
 
     </div>
-
     <CookieBanner />
+    </>
   )
 }
