@@ -17,6 +17,11 @@ function isScanPath(pathname: string): boolean {
   return SCAN_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
 }
 
+function decodeCity(value: string | null): string | null {
+  if (!value) return null
+  try { return decodeURIComponent(value) } catch { return value }
+}
+
 async function logIntento(request: NextRequest, intentoNum: number): Promise<void> {
   try {
     const ip = getClientIp(request)
@@ -34,7 +39,7 @@ async function logIntento(request: NextRequest, intentoNum: number): Promise<voi
         user_agent:  request.headers.get('user-agent')                  ?? null,
         intento_num: intentoNum,
         pais:        request.headers.get('x-vercel-ip-country')         ?? null,
-        ciudad:      request.headers.get('x-vercel-ip-city')            ?? null,
+        ciudad:      decodeCity(request.headers.get('x-vercel-ip-city')),
         region:      request.headers.get('x-vercel-ip-country-region')  ?? null,
         latitud:     request.headers.get('x-vercel-ip-latitude')        ?? null,
         longitud:    request.headers.get('x-vercel-ip-longitude')       ?? null,
