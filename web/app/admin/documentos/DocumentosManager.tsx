@@ -140,14 +140,14 @@ export default function DocumentosManager({ documentos: init }: { documentos: Do
                     onClick={() => fileRef.current?.click()}
                     className="border-2 border-dashed border-gray-300 rounded-lg px-4 py-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
                     <input ref={fileRef} type="file" className="hidden"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.odt,.ods,.ppt,.pptx,.txt"
                       onChange={e => setArchivo(e.target.files?.[0] ?? null)} />
                     {archivo ? (
                       <p className="text-sm text-gray-700">📄 {archivo.name} <span className="text-gray-400">({(archivo.size / 1024).toFixed(0)} KB)</span></p>
                     ) : (
                       <>
                         <p className="text-sm text-gray-500">Haz clic para seleccionar un archivo</p>
-                        <p className="text-xs text-gray-400 mt-1">PDF, Word, Excel, PowerPoint, ZIP</p>
+                        <p className="text-xs text-gray-400 mt-1">PDF, Word, Excel, PowerPoint, ODT, ODS, TXT</p>
                       </>
                     )}
                   </div>

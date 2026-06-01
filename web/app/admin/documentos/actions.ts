@@ -31,7 +31,7 @@ async function subirArchivo(file: File): Promise<string> {
     throw new Error(`Tipo de archivo no permitido. Formatos aceptados: ${ALLOWED_EXTENSIONS.join(', ')}`)
   }
   if (!ALLOWED_MIMES.includes(file.type)) {
-    throw new Error('El tipo MIME del archivo no está permitido.')
+    throw new Error(`El tipo MIME del archivo no está permitido: ${file.type}`)
   }
   if (file.size > MAX_FILE_SIZE) {
     throw new Error('El archivo supera el tamaño máximo permitido (20 MB).')
@@ -44,9 +44,12 @@ async function subirArchivo(file: File): Promise<string> {
   const { error } = await admin.storage
     .from('documentos')
     .upload(path, buffer, { contentType: file.type })
-  if (error) throw new Error('Error al subir el archivo al almacenamiento.')
-  const { data: { publicUrl } } = admin.storage.from('documentos').getPublicUrl(path)
-  return publicUrl
+  if (error) {
+    console.error('[documentos] Storage upload error:', error)
+    throw new Error(`Error al subir el archivo: ${error.message}`)
+  }
+  const { data } = admin.storage.from('documentos').getPublicUrl(path)
+  return data.publicUrl
 }
 
 async function borrarArchivo(url: string) {
@@ -62,47 +65,63 @@ async function borrarArchivo(url: string) {
 }
 
 export async function crearDocumento(formData: FormData) {
-  const titulo = ((formData.get('titulo') ?? '') as string).trim()
-  const descripcion = ((formData.get('descripcion') ?? '') as string).trim() || null
-  const categoria = ((formData.get('categoria') ?? '') as string).trim() || null
-  if (!titulo) return { error: 'El título es obligatorio.' }
+  try {
+    const titulo = ((formData.get('titulo') ?? '') as string).trim()
+    const descripcion = ((formData.get('descripcion') ?? '') as string).trim() || null
+    const categoria = ((formData.get('categoria') ?? '') as string).trim() || null
+    if (!titulo) return { error: 'El título es obligatorio.' }
 
-  let url: string | null = ((formData.get('url') ?? '') as string).trim() || null
-  const file = formData.get('file') as File | null
-  if (file && file.size > 0) {
-    try { url = await subirArchivo(file) } catch (e: unknown) {
-      return { error: e instanceof Error ? e.message : 'Error al subir el archivo.' }
+    let url: string | null = ((formData.get('url') ?? '') as string).trim() || null
+    const file = formData.get('file') as File | null
+    if (file && file.size > 0) {
+      try { url = await subirArchivo(file) } catch (e: unknown) {
+        return { error: e instanceof Error ? e.message : 'Error al subir el archivo.' }
+      }
     }
-  }
 
-  const { error } = await getAdmin().from('documentos').insert({ titulo, descripcion, url, categoria })
-  if (error) return { error: error.message }
-  revalidatePath('/admin/documentos')
-  revalidatePath('/panel/documentos')
-  return { error: null }
+    const { error } = await getAdmin().from('documentos').insert({ titulo, descripcion, url, categoria })
+    if (error) {
+      console.error('[documentos] DB insert error:', error)
+      return { error: error.message }
+    }
+    revalidatePath('/admin/documentos')
+    revalidatePath('/panel/documentos')
+    return { error: null }
+  } catch (e: unknown) {
+    console.error('[documentos] crearDocumento unexpected error:', e)
+    return { error: e instanceof Error ? e.message : 'Error inesperado al crear el documento.' }
+  }
 }
 
 export async function actualizarDocumento(id: number, formData: FormData) {
-  const titulo = ((formData.get('titulo') ?? '') as string).trim()
-  const descripcion = ((formData.get('descripcion') ?? '') as string).trim() || null
-  const categoria = ((formData.get('categoria') ?? '') as string).trim() || null
-  if (!titulo) return { error: 'El título es obligatorio.' }
+  try {
+    const titulo = ((formData.get('titulo') ?? '') as string).trim()
+    const descripcion = ((formData.get('descripcion') ?? '') as string).trim() || null
+    const categoria = ((formData.get('categoria') ?? '') as string).trim() || null
+    if (!titulo) return { error: 'El título es obligatorio.' }
 
-  let url: string | null = ((formData.get('url') ?? '') as string).trim() || null
-  const file = formData.get('file') as File | null
-  if (file && file.size > 0) {
-    const urlAnterior = formData.get('urlAnterior') as string | null
-    if (urlAnterior) await borrarArchivo(urlAnterior)
-    try { url = await subirArchivo(file) } catch (e: unknown) {
-      return { error: e instanceof Error ? e.message : 'Error al subir el archivo.' }
+    let url: string | null = ((formData.get('url') ?? '') as string).trim() || null
+    const file = formData.get('file') as File | null
+    if (file && file.size > 0) {
+      const urlAnterior = formData.get('urlAnterior') as string | null
+      if (urlAnterior) await borrarArchivo(urlAnterior)
+      try { url = await subirArchivo(file) } catch (e: unknown) {
+        return { error: e instanceof Error ? e.message : 'Error al subir el archivo.' }
+      }
     }
-  }
 
-  const { error } = await getAdmin().from('documentos').update({ titulo, descripcion, url, categoria }).eq('id', id)
-  if (error) return { error: error.message }
-  revalidatePath('/admin/documentos')
-  revalidatePath('/panel/documentos')
-  return { error: null }
+    const { error } = await getAdmin().from('documentos').update({ titulo, descripcion, url, categoria }).eq('id', id)
+    if (error) {
+      console.error('[documentos] DB update error:', error)
+      return { error: error.message }
+    }
+    revalidatePath('/admin/documentos')
+    revalidatePath('/panel/documentos')
+    return { error: null }
+  } catch (e: unknown) {
+    console.error('[documentos] actualizarDocumento unexpected error:', e)
+    return { error: e instanceof Error ? e.message : 'Error inesperado al actualizar el documento.' }
+  }
 }
 
 export async function eliminarDocumento(id: number, url?: string | null) {
