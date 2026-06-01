@@ -4,9 +4,9 @@ import { useState, useRef, useEffect } from 'react'
 import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
-type DestinatarioTipo = 'todos' | 'comite' | 'especifico'
+type DestinatarioTipo = 'todos' | 'comite' | 'especifico' | 'departamento'
 
-type Trabajador = { id: string; nombre: string; email: string }
+type Trabajador = { id: string; nombre: string; email: string; departamento: string | null }
 
 type Comunicado = {
   id: string
@@ -147,10 +147,45 @@ function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Rol
 }
 
 const DESTINATARIO_OPTS: { value: DestinatarioTipo; label: string; desc: string }[] = [
-  { value: 'todos',      label: 'Todos los trabajadores',    desc: 'Se envía a todos los trabajadores activos en el sistema.' },
-  { value: 'comite',     label: 'Miembros del comité',       desc: 'Solo llega a los miembros activos del comité de empresa.' },
-  { value: 'especifico', label: 'Trabajadores específicos',  desc: 'Elige uno o varios destinatarios de la lista.' },
+  { value: 'todos',        label: 'Todos los trabajadores',   desc: 'Se envía a todos los trabajadores activos en el sistema.' },
+  { value: 'comite',       label: 'Miembros del comité',      desc: 'Solo llega a los miembros activos del comité de empresa.' },
+  { value: 'departamento', label: 'Por departamento',         desc: 'Envía a todos los trabajadores de un departamento.' },
+  { value: 'especifico',   label: 'Trabajadores específicos', desc: 'Elige uno o varios destinatarios de la lista.' },
 ]
+
+function SelectorDepartamento({ trabajadores }: { trabajadores: Trabajador[] }) {
+  const [selected, setSelected] = useState<string | null>(null)
+
+  const departamentos = Array.from(
+    new Set(trabajadores.map(t => t.departamento).filter(Boolean))
+  ).sort() as string[]
+
+  return (
+    <div className="mt-3">
+      <label className="block text-xs font-medium text-gray-600 mb-2">Departamento *</label>
+      {selected && <input type="hidden" name="destinatario_departamento" value={selected} />}
+      <div className="flex flex-wrap gap-2">
+        {departamentos.map(dep => (
+          <button
+            key={dep}
+            type="button"
+            onClick={() => setSelected(dep === selected ? null : dep)}
+            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+              selected === dep
+                ? 'border-blue-900 bg-blue-50 text-blue-900 font-medium'
+                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+            }`}
+          >
+            {dep}
+          </button>
+        ))}
+      </div>
+      {!selected && (
+        <p className="text-xs text-gray-400 mt-2">Selecciona un departamento para ver a quién se enviará.</p>
+      )}
+    </div>
+  )
+}
 
 function BuscadorTrabajador({ trabajadores }: { trabajadores: Trabajador[] }) {
   const [query, setQuery]       = useState('')
@@ -260,6 +295,11 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
       setEstado('error')
       return
     }
+    if (tipo === 'departamento' && !data.get('destinatario_departamento')) {
+      setMsg('❌ Debes seleccionar un departamento.')
+      setEstado('error')
+      return
+    }
     setEstado('loading')
 
     const res = canSendDirect ? await crearYEnviar(data) : await solicitarAprobacion(data)
@@ -301,7 +341,7 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-2">Destinatarios *</label>
               <input type="hidden" name="destinatario_tipo" value={tipo} />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {DESTINATARIO_OPTS.map(opt => (
                   <button
                     key={opt.value}
@@ -318,6 +358,10 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
                   </button>
                 ))}
               </div>
+
+              {tipo === 'departamento' && (
+                <SelectorDepartamento trabajadores={trabajadores} />
+              )}
 
               {tipo === 'especifico' && (
                 <div className="mt-3">
@@ -359,9 +403,10 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
             {estado === 'loading'
               ? 'Procesando…'
               : canSendDirect
-                ? tipo === 'todos'    ? '📨 Enviar a todos los trabajadores'
-                : tipo === 'comite'   ? '📨 Enviar a los miembros del comité'
-                :                      '📨 Enviar a los trabajadores seleccionados'
+                ? tipo === 'todos'        ? '📨 Enviar a todos los trabajadores'
+                : tipo === 'comite'       ? '📨 Enviar a los miembros del comité'
+                : tipo === 'departamento' ? '📨 Enviar al departamento seleccionado'
+                :                          '📨 Enviar a los trabajadores seleccionados'
                 : '📤 Solicitar aprobación a la Presidenta'}
           </button>
 

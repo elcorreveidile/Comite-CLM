@@ -35,9 +35,13 @@ export async function getRole(email: string): Promise<'superadmin' | 'presidenta
   return null
 }
 
-type DestinatarioTipo = 'todos' | 'comite' | 'especifico'
+type DestinatarioTipo = 'todos' | 'comite' | 'especifico' | 'departamento'
 
-async function resolverEmails(tipo: DestinatarioTipo, emailsEspecificos?: string[]): Promise<{ emails: string[]; error?: string }> {
+async function resolverEmails(
+  tipo: DestinatarioTipo,
+  emailsEspecificos?: string[],
+  departamento?: string,
+): Promise<{ emails: string[]; error?: string }> {
   if (tipo === 'todos') {
     const { data } = await adminDb().from('trabajadores').select('email')
     const emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
@@ -49,6 +53,14 @@ async function resolverEmails(tipo: DestinatarioTipo, emailsEspecificos?: string
     const { data } = await adminDb().from('miembros_comite').select('email').eq('activo', true)
     const emails = (data ?? []).map((m: any) => m.email).filter(Boolean) as string[]
     if (!emails.length) return { emails: [], error: 'No hay miembros del comité activos registrados.' }
+    return { emails }
+  }
+
+  if (tipo === 'departamento') {
+    if (!departamento) return { emails: [], error: 'Debes seleccionar un departamento.' }
+    const { data } = await adminDb().from('trabajadores').select('email').eq('departamento', departamento)
+    const emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
+    if (!emails.length) return { emails: [], error: `No hay trabajadores en el departamento "${departamento}".` }
     return { emails }
   }
 
@@ -65,8 +77,9 @@ async function enviarEmails(
   cuerpo: string,
   tipo: DestinatarioTipo,
   emailsEspecificos?: string[],
+  departamento?: string,
 ): Promise<{ ok: boolean; count?: number; error?: string }> {
-  const { emails, error } = await resolverEmails(tipo, emailsEspecificos)
+  const { emails, error } = await resolverEmails(tipo, emailsEspecificos, departamento)
   if (error || !emails.length) return { ok: false, error: error ?? 'Sin destinatarios.' }
 
   const htmlBody = `
@@ -124,6 +137,7 @@ export async function crearYEnviar(formData: FormData) {
   const cuerpo             = String(formData.get('cuerpo')            ?? '').trim().slice(0, 20000)
   const tipo               = String(formData.get('destinatario_tipo') ?? 'todos') as DestinatarioTipo
   const emailsEspecificos  = formData.getAll('destinatario_email').map(v => String(v).trim()).filter(Boolean)
+  const departamento       = String(formData.get('destinatario_departamento') ?? '').trim() || undefined
 
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
 
@@ -133,7 +147,7 @@ export async function crearYEnviar(formData: FormData) {
     .select('id').single()
   if (dbErr || !com) return { ok: false, error: 'Error al guardar el comunicado.' }
 
-  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined)
+  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined, departamento)
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({
