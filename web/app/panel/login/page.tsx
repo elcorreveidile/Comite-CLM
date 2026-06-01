@@ -74,6 +74,15 @@ export default function PanelLoginPage() {
               Al acceder acepta el tratamiento de su correo según nuestra{' '}
               <a href="/privacidad" className="underline hover:text-gray-500">política de privacidad</a>.
             </p>
+            <div className="mt-5 pt-4 border-t border-gray-100 text-center">
+              <a
+                href="/manual"
+                className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <span>📖</span>
+                <span>Consultar el manual del panel</span>
+              </a>
+            </div>
           </div>
         )}
       </div>
