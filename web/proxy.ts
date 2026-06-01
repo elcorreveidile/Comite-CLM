@@ -58,8 +58,9 @@ function probeRedirect(request: NextRequest, intentoNum: number): NextResponse {
 }
 
 function getClientIp(request: NextRequest): string | null {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  return (request as any).ip
       ?? request.headers.get('x-real-ip')
+      ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       ?? null
 }
 
