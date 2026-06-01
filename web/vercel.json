@@ -1,3 +1,24 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "redirects": [
+    { "source": "/wp-admin",          "destination": "/intento", "permanent": false },
+    { "source": "/wp-admin/(.*)",      "destination": "/intento", "permanent": false },
+    { "source": "/wp-login.php",       "destination": "/intento", "permanent": false },
+    { "source": "/wp-login",           "destination": "/intento", "permanent": false },
+    { "source": "/wordpress",          "destination": "/intento", "permanent": false },
+    { "source": "/wordpress/(.*)",     "destination": "/intento", "permanent": false },
+    { "source": "/phpmyadmin",         "destination": "/intento", "permanent": false },
+    { "source": "/phpmyadmin/(.*)",    "destination": "/intento", "permanent": false },
+    { "source": "/pma",                "destination": "/intento", "permanent": false },
+    { "source": "/pma/(.*)",           "destination": "/intento", "permanent": false },
+    { "source": "/adminer",            "destination": "/intento", "permanent": false },
+    { "source": "/adminer/(.*)",       "destination": "/intento", "permanent": false },
+    { "source": "/xmlrpc.php",         "destination": "/intento", "permanent": false },
+    { "source": "/admin.php",          "destination": "/intento", "permanent": false },
+    { "source": "/login.php",          "destination": "/intento", "permanent": false },
+    { "source": "/shell.php",          "destination": "/intento", "permanent": false },
+    { "source": "/config.php",         "destination": "/intento", "permanent": false },
+    { "source": "/setup.php",          "destination": "/intento", "permanent": false },
+    { "source": "/install.php",        "destination": "/intento", "permanent": false }
+  ]
 }
