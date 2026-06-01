@@ -62,12 +62,12 @@ async function borrarArchivo(url: string) {
 }
 
 export async function crearDocumento(formData: FormData) {
-  const titulo = (formData.get('titulo') as string).trim()
-  const descripcion = (formData.get('descripcion') as string).trim() || null
-  const categoria = (formData.get('categoria') as string).trim() || null
+  const titulo = ((formData.get('titulo') ?? '') as string).trim()
+  const descripcion = ((formData.get('descripcion') ?? '') as string).trim() || null
+  const categoria = ((formData.get('categoria') ?? '') as string).trim() || null
   if (!titulo) return { error: 'El título es obligatorio.' }
 
-  let url: string | null = (formData.get('url') as string).trim() || null
+  let url: string | null = ((formData.get('url') ?? '') as string).trim() || null
   const file = formData.get('file') as File | null
   if (file && file.size > 0) {
     try { url = await subirArchivo(file) } catch (e: unknown) {
@@ -83,12 +83,12 @@ export async function crearDocumento(formData: FormData) {
 }
 
 export async function actualizarDocumento(id: number, formData: FormData) {
-  const titulo = (formData.get('titulo') as string).trim()
-  const descripcion = (formData.get('descripcion') as string).trim() || null
-  const categoria = (formData.get('categoria') as string).trim() || null
+  const titulo = ((formData.get('titulo') ?? '') as string).trim()
+  const descripcion = ((formData.get('descripcion') ?? '') as string).trim() || null
+  const categoria = ((formData.get('categoria') ?? '') as string).trim() || null
   if (!titulo) return { error: 'El título es obligatorio.' }
 
-  let url: string | null = (formData.get('url') as string).trim() || null
+  let url: string | null = ((formData.get('url') ?? '') as string).trim() || null
   const file = formData.get('file') as File | null
   if (file && file.size > 0) {
     const urlAnterior = formData.get('urlAnterior') as string | null
