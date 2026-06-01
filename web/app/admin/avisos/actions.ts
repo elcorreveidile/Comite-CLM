@@ -11,22 +11,22 @@ function getAdmin() {
 }
 
 export async function crearAviso(formData: FormData) {
-  const titulo = (formData.get('titulo') as string).trim()
-  const cuerpo = (formData.get('cuerpo') as string).trim()
+  const titulo = (formData.get('titulo') as string).trim().slice(0, 300)
+  const cuerpo = (formData.get('cuerpo') as string).trim().slice(0, 10000)
   if (!titulo || !cuerpo) return { error: 'Título y cuerpo son obligatorios.' }
   const { error } = await getAdmin().from('avisos').insert({ titulo, cuerpo, publicado: false })
-  if (error) return { error: error.message }
+  if (error) return { error: 'Error al crear el aviso.' }
   revalidatePath('/admin/avisos')
   revalidatePath('/panel/avisos')
   return { error: null }
 }
 
 export async function actualizarAviso(id: number, formData: FormData) {
-  const titulo = (formData.get('titulo') as string).trim()
-  const cuerpo = (formData.get('cuerpo') as string).trim()
+  const titulo = (formData.get('titulo') as string).trim().slice(0, 300)
+  const cuerpo = (formData.get('cuerpo') as string).trim().slice(0, 10000)
   if (!titulo || !cuerpo) return { error: 'Título y cuerpo son obligatorios.' }
   const { error } = await getAdmin().from('avisos').update({ titulo, cuerpo }).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) return { error: 'Error al actualizar el aviso.' }
   revalidatePath('/admin/avisos')
   revalidatePath('/panel/avisos')
   return { error: null }

@@ -10,15 +10,41 @@ function getAdmin() {
   )
 }
 
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'odt', 'ods', 'ppt', 'pptx', 'txt']
+const ALLOWED_MIMES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain',
+]
+const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MB
+
 async function subirArchivo(file: File): Promise<string> {
+  const ext = (file.name.split('.').pop() ?? '').toLowerCase()
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    throw new Error(`Tipo de archivo no permitido. Formatos aceptados: ${ALLOWED_EXTENSIONS.join(', ')}`)
+  }
+  if (!ALLOWED_MIMES.includes(file.type)) {
+    throw new Error('El tipo MIME del archivo no está permitido.')
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('El archivo supera el tamaño máximo permitido (20 MB).')
+  }
+
   const admin = getAdmin()
-  const ext = file.name.split('.').pop()
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const safeExt = ext.replace(/[^a-z0-9]/g, '')
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`
   const buffer = Buffer.from(await file.arrayBuffer())
   const { error } = await admin.storage
     .from('documentos')
     .upload(path, buffer, { contentType: file.type })
-  if (error) throw new Error(error.message)
+  if (error) throw new Error('Error al subir el archivo al almacenamiento.')
   const { data: { publicUrl } } = admin.storage.from('documentos').getPublicUrl(path)
   return publicUrl
 }

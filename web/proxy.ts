@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { SUPER_ADMINS, ALLOWED_ADMINS } from '@/lib/admins'
+import { SUPER_ADMINS } from '@/lib/admins'
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -72,7 +72,8 @@ async function isAdminUser(
       .maybeSingle()
     return !!data
   } catch {
-    return ALLOWED_ADMINS.includes(email)
+    // Denegar acceso si no se puede verificar con la base de datos
+    return false
   }
 }
 

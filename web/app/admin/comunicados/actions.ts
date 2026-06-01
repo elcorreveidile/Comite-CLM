@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { SUPER_ADMINS } from '@/lib/admins'
+import { escapeHtml } from '@/lib/html'
 import { revalidatePath } from 'next/cache'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -35,9 +36,9 @@ export async function getRole(email: string): Promise<'superadmin' | 'presidenta
 }
 
 async function enviarEmails(asunto: string, cuerpo: string): Promise<{ ok: boolean; count?: number; error?: string }> {
-  const { data: trabajadores } = await adminDb().from('trabajadores').select('email')
+  const { data: trabajadores } = await adminDb().from('trabajadores').select('email').eq('activo', true)
   const emails = (trabajadores ?? []).map((t: any) => t.email).filter(Boolean) as string[]
-  if (!emails.length) return { ok: false, error: 'No hay trabajadores registrados.' }
+  if (!emails.length) return { ok: false, error: 'No hay trabajadores activos registrados.' }
 
   const htmlBody = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
@@ -45,7 +46,7 @@ async function enviarEmails(asunto: string, cuerpo: string): Promise<{ ok: boole
         <strong>Comité de Empresa · CLM · Universidad de Granada</strong>
       </div>
       <div style="padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;line-height:1.7">
-        <div style="white-space:pre-wrap">${cuerpo.replace(/</g, '&lt;')}</div>
+        <div style="white-space:pre-wrap">${escapeHtml(cuerpo)}</div>
       </div>
       <p style="color:#9ca3af;font-size:12px;margin-top:16px;text-align:center">
         Centro de Lenguas Modernas · Universidad de Granada
@@ -63,7 +64,7 @@ async function enviarEmails(asunto: string, cuerpo: string): Promise<{ ok: boole
       subject: asunto,
       html: htmlBody,
     })
-    if (error) return { ok: false, error: error.message }
+    if (error) return { ok: false, error: 'Error al enviar el comunicado. Contacta con soporte.' }
   }
 
   return { ok: true, count: emails.length }
@@ -78,8 +79,8 @@ export async function crearYEnviar(formData: FormData) {
   if (role !== 'superadmin' && role !== 'presidenta')
     return { ok: false, error: 'No tienes permiso para enviar directamente.' }
 
-  const asunto = String(formData.get('asunto') ?? '').trim()
-  const cuerpo = String(formData.get('cuerpo') ?? '').trim()
+  const asunto = String(formData.get('asunto') ?? '').trim().slice(0, 300)
+  const cuerpo = String(formData.get('cuerpo') ?? '').trim().slice(0, 20000)
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
 
   const { data: com, error: dbErr } = await adminDb()
@@ -110,8 +111,8 @@ export async function solicitarAprobacion(formData: FormData) {
   const role = await getRole(email)
   if (role !== 'secretaria') return { ok: false, error: 'No autorizado.' }
 
-  const asunto = String(formData.get('asunto') ?? '').trim()
-  const cuerpo = String(formData.get('cuerpo') ?? '').trim()
+  const asunto = String(formData.get('asunto') ?? '').trim().slice(0, 300)
+  const cuerpo = String(formData.get('cuerpo') ?? '').trim().slice(0, 20000)
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
 
   const { error } = await adminDb().from('comunicados').insert({

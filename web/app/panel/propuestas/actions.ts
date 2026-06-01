@@ -16,8 +16,8 @@ export async function enviarPropuesta(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado.' }
 
-  const titulo = (formData.get('titulo') as string).trim()
-  const cuerpo = (formData.get('cuerpo') as string).trim()
+  const titulo  = (formData.get('titulo') as string).trim().slice(0, 300)
+  const cuerpo  = (formData.get('cuerpo') as string).trim().slice(0, 5000)
   const anonima = formData.get('anonima') === 'on'
 
   if (!titulo || !cuerpo) return { error: 'Título y descripción son obligatorios.' }
@@ -37,7 +37,7 @@ export async function enviarPropuesta(formData: FormData) {
     revisada: false,
   })
 
-  if (error) return { error: error.message }
+  if (error) return { error: 'Error al enviar la propuesta.' }
   revalidatePath('/panel/propuestas')
   return { error: null }
 }

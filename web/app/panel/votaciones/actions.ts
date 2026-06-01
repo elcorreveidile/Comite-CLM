@@ -34,7 +34,7 @@ export async function votar(votacionId: number, opcion: string) {
     trabajador_email: user.email!,
   })
 
-  if (error) return { error: error.message }
+  if (error) return { error: 'Error al registrar el voto.' }
   revalidatePath('/panel/votaciones')
   return { error: null }
 }
