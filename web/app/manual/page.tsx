@@ -1,0 +1,617 @@
+import PrintButton from './PrintButton'
+
+export const metadata = { title: 'Manual de Uso · Comité de Empresa CLM', robots: 'noindex' }
+
+const BLUE = '#003087'
+const RED  = '#E2001A'
+
+function Portada() {
+  return (
+    <div className="print:break-after-page flex flex-col items-center justify-center min-h-[90vh] text-center px-8 py-16">
+      {/* Logo */}
+      <div className="mb-10 flex flex-col items-center">
+        <div className="w-24 h-24 rounded-2xl flex flex-col items-center justify-center mb-4"
+             style={{ backgroundColor: BLUE }}>
+          <div className="w-full h-2.5 rounded-t-2xl" style={{ backgroundColor: RED }} />
+          <span className="text-white font-black text-3xl mt-1 tracking-tight">CE</span>
+          <span className="text-white/60 text-xs font-bold tracking-[0.2em] mb-1">CLM</span>
+        </div>
+        <p className="text-sm uppercase tracking-widest text-gray-400">Universidad de Granada</p>
+      </div>
+
+      <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight mb-4">
+        Manual de Uso
+      </h1>
+      <h2 className="text-xl sm:text-2xl font-semibold mb-2" style={{ color: BLUE }}>
+        Portal del Comité de Empresa
+      </h2>
+      <p className="text-gray-500 text-lg mb-12">Centro de Lenguas Modernas · Universidad de Granada</p>
+
+      <div className="flex flex-col sm:flex-row gap-6 text-sm text-gray-500 border-t border-gray-200 pt-8 w-full max-w-lg justify-center">
+        <span>Versión junio 2026</span>
+        <span className="hidden sm:block text-gray-300">·</span>
+        <span>comiteclm.com</span>
+        <span className="hidden sm:block text-gray-300">·</span>
+        <span>Uso interno</span>
+      </div>
+    </div>
+  )
+}
+
+function SectionHeader({ color, label, title, subtitle }: { color: string; label: string; title: string; subtitle: string }) {
+  return (
+    <div className="print:break-before-page rounded-2xl text-white p-8 mb-8" style={{ backgroundColor: color }}>
+      <p className="text-xs uppercase tracking-[0.25em] opacity-70 mb-2">{label}</p>
+      <h2 className="text-3xl font-black leading-tight mb-2">{title}</h2>
+      <p className="opacity-80 text-base">{subtitle}</p>
+    </div>
+  )
+}
+
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <div className="flex gap-4 mb-6">
+      <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mt-0.5"
+           style={{ backgroundColor: BLUE }}>
+        {n}
+      </div>
+      <div>
+        <p className="font-semibold text-gray-800 mb-1">{title}</p>
+        <div className="text-gray-600 text-sm leading-relaxed">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+function Note({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="border-l-4 bg-blue-50 text-blue-800 text-sm rounded-r-xl px-4 py-3 my-4 leading-relaxed"
+         style={{ borderColor: BLUE }}>
+      {children}
+    </div>
+  )
+}
+
+function Warning({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="border-l-4 bg-amber-50 text-amber-800 text-sm rounded-r-xl px-4 py-3 my-4 leading-relaxed"
+         style={{ borderColor: '#F59E0B' }}>
+      {children}
+    </div>
+  )
+}
+
+function H3({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-lg font-bold mt-8 mb-3" style={{ color: BLUE }}>{children}</h3>
+}
+
+function H4({ children }: { children: React.ReactNode }) {
+  return <h4 className="font-semibold text-gray-800 mt-5 mb-2">{children}</h4>
+}
+
+export default function ManualPage() {
+  return (
+    <>
+      <style>{`
+        @media print {
+          @page { margin: 18mm 15mm; size: A4; }
+          body { font-size: 10.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .print\\:break-before-page { break-before: page; }
+          .print\\:break-after-page  { break-after: page; }
+          h2 { break-after: avoid; }
+          h3, h4 { break-after: avoid; }
+          table { break-inside: avoid; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
+      <div className="bg-white text-gray-900 max-w-3xl mx-auto px-6 py-10 print:px-0 print:py-0">
+
+        {/* ── PORTADA ───────────────────────────────────── */}
+        <Portada />
+
+        {/* ── ÍNDICE ────────────────────────────────────── */}
+        <div className="print:break-before-page mb-16">
+          <h2 className="text-2xl font-black mb-6 pb-3 border-b-2" style={{ borderColor: BLUE, color: BLUE }}>
+            Índice
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-600">
+            <div>
+              <p className="font-bold text-gray-900 mb-2 mt-3">Parte I — Trabajadores</p>
+              {[
+                '1. Introducción',
+                '2. Acceso al panel',
+                '3. Panel de inicio',
+                '4. Tablón de avisos',
+                '5. Votaciones',
+                '6. Propuestas',
+                '7. Calendario',
+                '8. Documentos',
+                '9. Uso desde el móvil',
+              ].map(t => <p key={t} className="py-0.5 border-b border-gray-100">{t}</p>)}
+            </div>
+            <div>
+              <p className="font-bold text-gray-900 mb-2 mt-3">Parte II — Miembros del comité</p>
+              {[
+                '1. Acceso al área de administración',
+                '2. Panel de control',
+                '3. Gestión de trabajadores',
+                '4. Tablón de avisos',
+                '5. Votaciones',
+                '6. Propuestas',
+                '7. Calendario',
+                '8. Documentos',
+                '9. Comunicados a trabajadores',
+                '10. Gestión de miembros',
+                'Apéndice — Roles y permisos',
+              ].map(t => <p key={t} className="py-0.5 border-b border-gray-100">{t}</p>)}
+            </div>
+          </div>
+        </div>
+
+        {/* ════════════════════════════════════════════════
+            PARTE I — TRABAJADORES
+        ════════════════════════════════════════════════ */}
+        <SectionHeader
+          color={BLUE}
+          label="Parte I"
+          title="Guía para trabajadores"
+          subtitle="Todo lo que necesitas saber para usar el panel de trabajadores del CLM."
+        />
+
+        {/* 1. Introducción */}
+        <H3>1. Introducción</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-4">
+          El portal del Comité de Empresa del Centro de Lenguas Modernas de la Universidad de Granada
+          es una plataforma privada donde los trabajadores del CLM pueden mantenerse informados,
+          participar en votaciones, consultar documentos y comunicarse con el comité de forma directa
+          y segura.
+        </p>
+        <p className="text-gray-600 text-sm leading-relaxed mb-4">
+          El acceso es exclusivo para trabajadores registrados. No se usa ninguna contraseña: el sistema
+          envía automáticamente un enlace seguro a tu correo cada vez que quieras entrar.
+        </p>
+
+        {/* 2. Acceso */}
+        <H3>2. Acceso al panel</H3>
+        <Step n={1} title="Abre el portal">
+          Entra en <strong>comiteclm.com</strong> y haz clic en el botón <strong>«Acceso trabajadores»</strong>
+          (esquina superior derecha de la página) o en <strong>«Entrar al panel de trabajadores»</strong>
+          en el centro de la pantalla.
+        </Step>
+        <Step n={2} title="Introduce tu correo de trabajo">
+          Escribe tu dirección de correo electrónico del CLM o de la UGR
+          (por ejemplo, <em>tu.nombre@ugr.es</em> o <em>tu.nombre@clm.ugr.es</em>).
+          Solo funcionan los correos que el comité haya dado de alta en el sistema.
+        </Step>
+        <Step n={3} title="Revisa tu bandeja de entrada">
+          En pocos segundos recibirás un correo con asunto <strong>«Enlace de acceso»</strong>.
+          Abre ese correo y haz clic en el botón de acceso.
+        </Step>
+        <Step n={4} title="Estás dentro">
+          El enlace te abrirá directamente el panel de trabajadores. La sesión permanece
+          activa en ese dispositivo; no necesitarás volver a identificarte hasta que la sesión expire.
+        </Step>
+        <Note>
+          <strong>Sin contraseñas:</strong> el portal usa <em>magic links</em> (enlaces seguros de un solo uso).
+          Cada vez que necesites acceder desde un nuevo dispositivo o navegador, repite el proceso
+          introduciendo tu correo. El enlace caduca a los 60 minutos.
+        </Note>
+        <Warning>
+          Si no recibes el correo en 2 minutos, revisa la carpeta de spam o correo no deseado.
+          Si tu correo no está registrado, contacta con el comité a través del formulario de la página principal.
+        </Warning>
+
+        {/* 3. Panel de inicio */}
+        <H3>3. Panel de inicio</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-4">
+          Al entrar verás tu panel personal con un saludo y acceso rápido a todas las secciones.
+          Cada tarjeta muestra cuántos elementos activos hay (por ejemplo, cuántos avisos nuevos
+          o votaciones en marcha).
+        </p>
+        <div className="grid sm:grid-cols-2 gap-3 my-4">
+          {[
+            { icon: '📋', name: 'Tablón de avisos', desc: 'Comunicaciones del comité.' },
+            { icon: '🗳️', name: 'Votaciones',        desc: 'Consultas y votaciones abiertas.' },
+            { icon: '💬', name: 'Propuestas',         desc: 'Envía sugerencias al comité.' },
+            { icon: '📅', name: 'Calendario',         desc: 'Próximas fechas y reuniones.' },
+            { icon: '📁', name: 'Documentos',         desc: 'Convenio, actas y circulares.' },
+          ].map(({ icon, name, desc }) => (
+            <div key={name} className="flex items-start gap-3 border border-gray-100 rounded-xl p-3 text-sm">
+              <span className="text-xl">{icon}</span>
+              <div><p className="font-semibold text-gray-800">{name}</p><p className="text-gray-500">{desc}</p></div>
+            </div>
+          ))}
+        </div>
+
+        {/* 4. Tablón de avisos */}
+        <H3>4. Tablón de avisos</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          En el tablón encontrarás todos los comunicados, acuerdos y noticias que el comité
+          haya publicado. Los avisos aparecen ordenados del más reciente al más antiguo.
+          Cada aviso muestra el título, el contenido y la fecha de publicación.
+        </p>
+        <Note>Si no hay avisos publicados aparecerá el mensaje <em>«No hay avisos publicados en este momento»</em>.</Note>
+
+        {/* 5. Votaciones */}
+        <H3>5. Votaciones</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          Cuando el comité abra una consulta o votación, aparecerá en esta sección.
+          Para participar:
+        </p>
+        <Step n={1} title="Accede a la votación activa">Lee el título y la descripción de la consulta.</Step>
+        <Step n={2} title="Selecciona tu opción">Haz clic en la opción que quieras votar.</Step>
+        <Step n={3} title="Confirma">Tu voto queda registrado. Cada trabajador solo puede votar una vez por consulta.</Step>
+        <Note>Una vez emitido, el voto no puede modificarse. El sistema registra que has votado pero la
+          confidencialidad del sentido del voto se garantiza mediante el diseño de la base de datos.</Note>
+
+        {/* 6. Propuestas */}
+        <H3>6. Propuestas</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          ¿Tienes una sugerencia o quieres trasladar algo al comité? Usa esta sección para enviar
+          una propuesta directamente. El comité la revisará y podrá responderte.
+        </p>
+        <Step n={1} title="Escribe el título">Resume tu propuesta en una línea (máx. 300 caracteres).</Step>
+        <Step n={2} title="Desarrolla el contenido">Explica tu propuesta con el detalle que consideres necesario (máx. 5 000 caracteres).</Step>
+        <Step n={3} title="Elige si quieres ser anónimo/a">
+          Activa la casilla <strong>«Enviar como anónima»</strong> si prefieres que el comité
+          no sepa de quién proviene la propuesta.
+        </Step>
+        <Step n={4} title="Envía">Haz clic en «Enviar propuesta».</Step>
+        <H4>Seguimiento de tus propuestas</H4>
+        <p className="text-gray-600 text-sm leading-relaxed">
+          Debajo del formulario encontrarás el listado de todas las propuestas que has enviado.
+          Cada una muestra su estado:
+        </p>
+        <ul className="list-disc list-inside text-sm text-gray-600 mt-2 mb-4 space-y-1">
+          <li><strong className="text-amber-700">Pendiente</strong> — el comité aún no la ha revisado.</li>
+          <li><strong className="text-green-700">Revisada</strong> — el comité la ha leído. Si han dejado una respuesta, aparecerá debajo.</li>
+        </ul>
+
+        {/* 7. Calendario */}
+        <H3>7. Calendario</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          El calendario muestra los próximos eventos del comité: reuniones, plazos importantes,
+          actos sindicales, etc. Solo aparecen los eventos a partir de la fecha actual.
+          Cada evento puede incluir título, fecha, hora, lugar y descripción.
+        </p>
+
+        {/* 8. Documentos */}
+        <H3>8. Documentos</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          En esta sección encontrarás toda la documentación relevante: el convenio colectivo,
+          las actas de las reuniones del comité, circulares y cualquier otro documento que
+          el comité considere de interés. Los documentos están organizados por categorías.
+          Para abrir un documento haz clic en el enlace <strong>«Abrir →»</strong>.
+        </p>
+
+        {/* 9. Móvil */}
+        <H3>9. Uso desde el móvil</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          El portal está optimizado para teléfonos móviles. En la parte inferior de la pantalla
+          encontrarás una barra de navegación rápida con acceso a las cinco secciones principales:
+        </p>
+        <div className="flex justify-around bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 my-4 text-center">
+          {['🏠 Inicio','📋 Avisos','🗳️ Votar','💬 Proponer','··· Más'].map(s => (
+            <div key={s} className="text-xs text-gray-600">{s}</div>
+          ))}
+        </div>
+        <p className="text-sm text-gray-600">
+          El botón <strong>«···&nbsp;Más»</strong> despliega un menú con acceso al Calendario,
+          Documentos y la opción de Cerrar sesión.
+        </p>
+
+        {/* ════════════════════════════════════════════════
+            PARTE II — ADMINISTRACIÓN
+        ════════════════════════════════════════════════ */}
+        <SectionHeader
+          color="#1a1a2e"
+          label="Parte II"
+          title="Guía para miembros del comité"
+          subtitle="Manual del área de administración — acceso restringido a los representantes elegidos."
+        />
+
+        {/* 1. Acceso admin */}
+        <H3>1. Acceso al área de administración</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-4">
+          El área de administración es accesible exclusivamente para los miembros del comité
+          que estén registrados en el sistema. El proceso de acceso es el mismo que el de los
+          trabajadores (enlace por correo), pero en una URL diferente.
+        </p>
+        <Step n={1} title="Ve a la URL de administración">
+          En el pie de página de <strong>comiteclm.com</strong> encontrarás el enlace
+          <strong> «Área del comité»</strong>. También puedes acceder directamente en
+          <strong> comiteclm.com/admin/login</strong>.
+        </Step>
+        <Step n={2} title="Introduce tu correo de miembro del comité">
+          Solo los correos registrados por el superadministrador tienen acceso.
+          Si tu correo no está autorizado verás el mensaje de error correspondiente.
+        </Step>
+        <Step n={3} title="Revisa tu correo y haz clic en el enlace">
+          El proceso es idéntico al del panel de trabajadores.
+        </Step>
+        <Warning>
+          <strong>Seguridad:</strong> si alguien intenta acceder sin autorización, el sistema lo detecta
+          y le muestra una página de aviso. Los intentos repetidos quedan registrados.
+        </Warning>
+
+        {/* 2. Panel de control */}
+        <H3>2. Panel de control</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          El panel de control muestra una visión global del estado del portal: número de trabajadores
+          registrados, avisos publicados, votaciones activas, propuestas pendientes de respuesta,
+          documentos y próximos eventos del calendario. Cada cifra es un enlace directo a la
+          sección correspondiente.
+        </p>
+        <p className="text-sm text-gray-600">
+          Las cifras en <span style={{ color: RED }} className="font-semibold">rojo</span> indican
+          elementos que requieren atención (votaciones activas, propuestas sin revisar).
+        </p>
+
+        {/* 3. Trabajadores */}
+        <H3>3. Gestión de trabajadores</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          El censo de trabajadores determina quién puede acceder al panel. Desde esta sección
+          puedes añadir, editar y dar de baja a trabajadores.
+        </p>
+        <H4>Añadir un trabajador</H4>
+        <p className="text-sm text-gray-600 mb-2">
+          Haz clic en <strong>«Nuevo trabajador»</strong> y rellena los campos:
+        </p>
+        <div className="overflow-x-auto my-3">
+          <table className="w-full text-sm border-collapse">
+            <thead><tr style={{ backgroundColor: BLUE }} className="text-white text-left">
+              <th className="px-3 py-2 rounded-tl-lg">Campo</th>
+              <th className="px-3 py-2">Descripción</th>
+              <th className="px-3 py-2 rounded-tr-lg">Obligatorio</th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
+              {[
+                ['Nombre completo','Nombre y apellidos del trabajador','Sí'],
+                ['Correo electrónico','El correo con el que accederá al panel','Sí'],
+                ['Departamento','Departamento o área del CLM','No'],
+                ['Teléfono','Número de contacto','No'],
+                ['Notas','Observaciones internas (no visibles al trabajador)','No'],
+              ].map(([c,d,o]) => (
+                <tr key={c} className="odd:bg-gray-50">
+                  <td className="px-3 py-2 font-medium">{c}</td>
+                  <td className="px-3 py-2 text-gray-500">{d}</td>
+                  <td className="px-3 py-2 text-center">{o === 'Sí' ? '✓' : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <Note>
+          Para dar de baja a un trabajador (que ya no trabaje en el CLM) basta con eliminarlo
+          del censo. Perderá el acceso de inmediato.
+        </Note>
+
+        {/* 4. Avisos */}
+        <H3>4. Tablón de avisos</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          Los avisos son los mensajes que el comité publica en el panel de los trabajadores.
+        </p>
+        <H4>Crear un aviso</H4>
+        <Step n={1} title="Haz clic en «Nuevo aviso»">Aparecerá el formulario de creación.</Step>
+        <Step n={2} title="Escribe el título y el contenido">El título se muestra en negrita; el cuerpo admite texto con saltos de línea (máx. 10 000 caracteres).</Step>
+        <Step n={3} title="Guarda como borrador o publica directamente">
+          Un aviso guardado sin publicar no es visible para los trabajadores hasta que lo actives
+          con el botón de toggle <strong>«Publicado / Oculto»</strong>.
+        </Step>
+        <p className="text-sm text-gray-600 mt-2">
+          Puedes <strong>editar</strong> o <strong>eliminar</strong> cualquier aviso en cualquier momento.
+          Al eliminarlo desaparece inmediatamente del panel de los trabajadores.
+        </p>
+
+        {/* 5. Votaciones */}
+        <H3>5. Votaciones</H3>
+        <H4>Crear una votación</H4>
+        <Step n={1} title="Haz clic en «Nueva votación»">Rellena el título (obligatorio) y una descripción opcional.</Step>
+        <Step n={2} title="Añade las opciones">Cada opción es una respuesta posible. Mínimo 2, máximo 10.</Step>
+        <Step n={3} title="Activa la votación cuando estés listo/a">
+          La votación se crea en estado <em>inactiva</em> y no es visible para los trabajadores.
+          Cuando quieras que voten, actívala con el botón de toggle.
+        </Step>
+        <H4>Consultar los resultados</H4>
+        <p className="text-sm text-gray-600">
+          En el listado de votaciones verás, en tiempo real, el número de votos recibidos por cada
+          opción. Para cerrar la votación, desactívala con el mismo toggle.
+        </p>
+        <Warning>
+          Al eliminar una votación se borran también todos los votos registrados. Esta acción
+          no se puede deshacer.
+        </Warning>
+
+        {/* 6. Propuestas */}
+        <H3>6. Propuestas de los trabajadores</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          Las propuestas enviadas por los trabajadores aparecen en esta sección ordenadas de
+          más reciente a más antigua. Las propuestas anónimas no muestran el nombre del trabajador.
+        </p>
+        <H4>Responder a una propuesta</H4>
+        <Step n={1} title="Abre la propuesta">Haz clic en el título para ver el detalle completo.</Step>
+        <Step n={2} title="Escribe la respuesta">Usa el campo de texto de respuesta del comité.</Step>
+        <Step n={3} title="Guarda">La propuesta pasa a estado «Revisada» y el trabajador verá la respuesta en su panel.</Step>
+        <p className="text-sm text-gray-600 mt-2">
+          También puedes marcar una propuesta como revisada sin añadir respuesta escrita.
+        </p>
+
+        {/* 7. Calendario */}
+        <H3>7. Calendario</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          Gestiona los eventos que los trabajadores verán en su calendario.
+        </p>
+        <H4>Añadir un evento</H4>
+        <p className="text-sm text-gray-600 mb-3">
+          Haz clic en <strong>«Nuevo evento»</strong> y rellena los datos:
+          título (obligatorio), fecha (obligatorio, formato AAAA-MM-DD), hora (HH:MM, opcional),
+          lugar (opcional) y descripción (opcional, máx. 2 000 caracteres).
+        </p>
+        <p className="text-sm text-gray-600">
+          Los eventos del pasado no se muestran en el panel de los trabajadores, pero
+          permanecen en el historial del administrador.
+        </p>
+
+        {/* 8. Documentos */}
+        <H3>8. Documentos</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          Sube o enlaza documentos que los trabajadores podrán consultar desde su panel.
+        </p>
+        <H4>Subir un documento</H4>
+        <Step n={1} title="Haz clic en «Nuevo documento»">Rellena el título (obligatorio) y, opcionalmente, descripción y categoría.</Step>
+        <Step n={2} title="Adjunta el archivo o pega una URL">
+          Puedes subir un archivo directamente (PDF, Word, Excel, OpenDocument…) o pegar
+          la dirección de un documento externo (p. ej. un enlace de Google Drive).
+        </Step>
+        <Step n={3} title="Guarda">El documento aparecerá de inmediato en el panel de los trabajadores.</Step>
+        <div className="my-3 text-sm">
+          <p className="font-semibold text-gray-700 mb-1">Formatos de archivo aceptados:</p>
+          <p className="text-gray-500">PDF, DOC, DOCX, XLS, XLSX, ODT, ODS, PPT, PPTX, TXT · Tamaño máximo: 20 MB</p>
+        </div>
+
+        {/* 9. Comunicados */}
+        <H3>9. Comunicados a trabajadores</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-4">
+          Los comunicados permiten enviar un correo electrónico a <strong>todos los trabajadores
+          activos</strong> registrados en el sistema. Es la herramienta de comunicación masiva del comité.
+        </p>
+        <H4>Roles y permisos para enviar comunicados</H4>
+        <div className="overflow-x-auto my-3">
+          <table className="w-full text-sm border-collapse">
+            <thead><tr style={{ backgroundColor: '#1a1a2e' }} className="text-white text-left">
+              <th className="px-3 py-2 rounded-tl-lg">Rol</th>
+              <th className="px-3 py-2">¿Puede redactar?</th>
+              <th className="px-3 py-2">¿Envío directo?</th>
+              <th className="px-3 py-2 rounded-tr-lg">¿Puede aprobar?</th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
+              {[
+                ['Secretario/a General (superadmin)', 'Sí', 'Sí', 'Sí'],
+                ['Presidenta', 'Sí', 'Sí', 'Sí'],
+                ['Secretaria', 'Sí', 'No — requiere aprobación', 'No'],
+                ['Resto de miembros', 'No', 'No', 'No'],
+              ].map(([r, c, e, a]) => (
+                <tr key={r} className="odd:bg-gray-50 text-gray-600">
+                  <td className="px-3 py-2 font-medium text-gray-800">{r}</td>
+                  <td className="px-3 py-2">{c}</td>
+                  <td className="px-3 py-2">{e}</td>
+                  <td className="px-3 py-2">{a}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <H4>Flujo para la Presidenta / Secretario General</H4>
+        <Step n={1} title="Redacta el comunicado">Escribe el asunto y el cuerpo del mensaje (máx. 20 000 caracteres).</Step>
+        <Step n={2} title="Haz clic en «Enviar a todos los trabajadores»">El sistema envía el correo a todos los trabajadores activos y registra el comunicado como enviado.</Step>
+
+        <H4>Flujo para la Secretaria</H4>
+        <Step n={1} title="Redacta el comunicado">Escribe el asunto y el cuerpo del mensaje.</Step>
+        <Step n={2} title="Haz clic en «Solicitar aprobación a la Presidenta»">
+          El comunicado queda en estado <strong>«Pendiente de aprobación»</strong> y aparece
+          destacado en el panel de la Presidenta.
+        </Step>
+        <Step n={3} title="La Presidenta aprueba o rechaza">
+          Cuando la Presidenta acceda al área de comunicados verá el texto redactado por la
+          Secretaria y podrá <strong>Aprobar y enviar</strong> o <strong>Rechazar</strong>.
+          Si aprueba, el correo se envía automáticamente a todos los trabajadores.
+        </Step>
+        <Note>
+          Los comunicados se envían como correo electrónico con el remitente
+          <em> no-reply@comiteclm.com</em>. Los destinatarios son todos los trabajadores marcados
+          como activos en el censo. El correo se envía con copia oculta (BCC) para proteger
+          la privacidad de los destinatarios.
+        </Note>
+
+        {/* 10. Miembros */}
+        <H3>10. Gestión de miembros del comité</H3>
+        <p className="text-gray-600 text-sm leading-relaxed mb-3">
+          Esta sección es accesible <strong>únicamente para el Secretario General (superadministrador)</strong>.
+          Permite gestionar qué personas tienen acceso al área de administración y qué cargo
+          desempeñan dentro del comité (Presidenta, Secretaria, etc.).
+        </p>
+        <p className="text-sm text-gray-600 mb-2">
+          Desde aquí puedes:
+        </p>
+        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mb-4">
+          <li>Añadir nuevos miembros con su nombre, correo y cargo.</li>
+          <li>Modificar el cargo de un miembro existente.</li>
+          <li>Desactivar a un miembro para que pierda el acceso al área de administración.</li>
+          <li>Consultar el sindicato al que pertenece cada representante.</li>
+        </ul>
+        <Warning>
+          Los cambios en los miembros del comité tienen efecto inmediato. Si desactivas a un
+          miembro, perderá el acceso en la próxima carga de página.
+        </Warning>
+
+        {/* ── APÉNDICE ──────────────────────────────────── */}
+        <div className="print:break-before-page mt-12">
+          <h2 className="text-2xl font-black mb-6 pb-3 border-b-2" style={{ borderColor: RED, color: RED }}>
+            Apéndice — Roles y permisos
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead><tr style={{ backgroundColor: RED }} className="text-white text-left">
+                <th className="px-3 py-2 rounded-tl-lg">Rol</th>
+                <th className="px-3 py-2">Panel<br/>trabajadores</th>
+                <th className="px-3 py-2">Área<br/>admin</th>
+                <th className="px-3 py-2">Comunicados<br/>directos</th>
+                <th className="px-3 py-2">Aprobar<br/>comunicados</th>
+                <th className="px-3 py-2 rounded-tr-lg">Gestionar<br/>miembros</th>
+              </tr></thead>
+              <tbody className="divide-y divide-gray-100 text-center">
+                {[
+                  ['Trabajador',             '✓','—','—','—','—'],
+                  ['Miembro del comité',      '✓','✓','—','—','—'],
+                  ['Secretaria',             '✓','✓','—','—','—'],
+                  ['Presidenta',             '✓','✓','✓','✓','—'],
+                  ['Secretario/a General',   '✓','✓','✓','✓','✓'],
+                ].map(([rol, ...rest]) => (
+                  <tr key={rol} className="odd:bg-gray-50 text-gray-600">
+                    <td className="px-3 py-2 text-left font-medium text-gray-800">{rol}</td>
+                    {rest.map((v, i) => <td key={i} className={`px-3 py-2 ${v === '✓' ? 'text-green-600 font-bold' : 'text-gray-300'}`}>{v}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Datos de contacto */}
+          <div className="mt-12 p-6 rounded-2xl border border-gray-200 bg-gray-50 text-sm">
+            <p className="font-bold text-gray-800 mb-3">Contacto del comité</p>
+            <div className="grid sm:grid-cols-2 gap-2 text-gray-600">
+              <div>
+                <p className="font-semibold">CCOO</p>
+                <p>ccoo@fyg.ugr.es</p>
+              </div>
+              <div>
+                <p className="font-semibold">UGT</p>
+                <p>ugt@fyg.ugr.es</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="font-semibold">Dirección</p>
+                <p>Placeta del Hospicio Viejo, s/n — 18010 Granada</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="font-semibold">Portal</p>
+                <p>comiteclm.com</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pie del documento */}
+          <div className="mt-8 text-center text-xs text-gray-300 border-t pt-6">
+            <p>Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada</p>
+            <p>Manual de uso v1.0 — junio 2026 · Documento de uso interno</p>
+            <p className="mt-1">Desarrollo web: <a href="https://www.por2duros.com" className="underline hover:text-gray-500">Por 2 duros</a></p>
+          </div>
+        </div>
+
+      </div>
+
+      <PrintButton />
+    </>
+  )
+}
