@@ -1,5 +1,8 @@
 export const SUPER_ADMINS = ['benitezl@go.ugr.es']
 
+// IPs de confianza: no se registran ni se redirigen a páginas de error
+export const SAFE_IPS = ['81.38.21.83']
+
 // Fallback mientras no exista la tabla miembros_comite en Supabase
 export const ALLOWED_ADMINS = [
   'benjamin.prieto@clm.ugr.es',

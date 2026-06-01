@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { SUPER_ADMINS } from '@/lib/admins'
+import { SUPER_ADMINS, SAFE_IPS } from '@/lib/admins'
 
 // Paths commonly scanned by automated attack tools and bots
 const SCAN_PATHS = [
@@ -19,9 +19,7 @@ function isScanPath(pathname: string): boolean {
 
 async function logIntento(request: NextRequest, intentoNum: number): Promise<void> {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-             ?? request.headers.get('x-real-ip')
-             ?? null
+    const ip = getClientIp(request)
     await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/intentos_acceso`, {
       method: 'POST',
       headers: {
@@ -59,14 +57,25 @@ function probeRedirect(request: NextRequest, intentoNum: number): NextResponse {
   return res
 }
 
+function getClientIp(request: NextRequest): string | null {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      ?? request.headers.get('x-real-ip')
+      ?? null
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const probes = parseInt(request.cookies.get('_pa')?.value ?? '0')
+  const clientIp = getClientIp(request)
+  const isSafeIp = clientIp !== null && SAFE_IPS.includes(clientIp)
 
   // Intercept known attack/scanning paths before Vercel's own error handling
   if (isScanPath(pathname)) {
-    await logIntento(request, probes + 1)
-    return probeRedirect(request, probes + 1)
+    if (!isSafeIp) {
+      await logIntento(request, probes + 1)
+      return probeRedirect(request, probes + 1)
+    }
+    return NextResponse.next({ request })
   }
 
   let supabaseResponse = NextResponse.next({ request })
@@ -101,8 +110,11 @@ export async function proxy(request: NextRequest) {
       return supabaseResponse
     }
     if (!user || !await isAdminUser(supabase, user.email ?? '')) {
-      await logIntento(request, probes + 1)
-      return probeRedirect(request, probes + 1)
+      if (!isSafeIp) {
+        await logIntento(request, probes + 1)
+        return probeRedirect(request, probes + 1)
+      }
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
     return supabaseResponse
   }
