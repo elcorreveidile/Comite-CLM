@@ -147,16 +147,17 @@ function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Rol
 }
 
 const DESTINATARIO_OPTS: { value: DestinatarioTipo; label: string; desc: string }[] = [
-  { value: 'todos',      label: 'Todos los trabajadores',  desc: 'Se envía a todos los trabajadores activos en el sistema.' },
-  { value: 'comite',     label: 'Miembros del comité',     desc: 'Solo llega a los miembros activos del comité de empresa.' },
-  { value: 'especifico', label: 'Trabajador específico',   desc: 'Elige un único destinatario de la lista de trabajadores.' },
+  { value: 'todos',      label: 'Todos los trabajadores',    desc: 'Se envía a todos los trabajadores activos en el sistema.' },
+  { value: 'comite',     label: 'Miembros del comité',       desc: 'Solo llega a los miembros activos del comité de empresa.' },
+  { value: 'especifico', label: 'Trabajadores específicos',  desc: 'Elige uno o varios destinatarios de la lista.' },
 ]
 
 function BuscadorTrabajador({ trabajadores }: { trabajadores: Trabajador[] }) {
   const [query, setQuery]       = useState('')
   const [open, setOpen]         = useState(false)
-  const [selected, setSelected] = useState<Trabajador | null>(null)
+  const [selected, setSelected] = useState<Trabajador[]>([])
   const containerRef            = useRef<HTMLDivElement>(null)
+  const inputRef                = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -168,55 +169,65 @@ function BuscadorTrabajador({ trabajadores }: { trabajadores: Trabajador[] }) {
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
+  const selectedIds = new Set(selected.map(t => t.id))
   const filtered = (query.trim().length === 0 ? trabajadores : trabajadores.filter(t =>
     t.nombre.toLowerCase().includes(query.toLowerCase()) ||
     t.email.toLowerCase().includes(query.toLowerCase())
-  )).slice(0, 12)
+  )).filter(t => !selectedIds.has(t.id)).slice(0, 12)
 
-  function select(t: Trabajador) {
-    setSelected(t)
+  function add(t: Trabajador) {
+    setSelected(prev => [...prev, t])
     setQuery('')
-    setOpen(false)
+    setOpen(true)
+    inputRef.current?.focus()
   }
 
-  function clear() {
-    setSelected(null)
-    setQuery('')
+  function remove(id: string) {
+    setSelected(prev => prev.filter(t => t.id !== id))
   }
 
   return (
     <div ref={containerRef} className="relative">
-      <input type="hidden" name="destinatario_email" value={selected?.email ?? ''} />
-      <div className="relative">
-        <input
-          type="text"
-          value={selected ? `${selected.nombre} (${selected.email})` : query}
-          onChange={e => { setQuery(e.target.value); setSelected(null); setOpen(true) }}
-          onFocus={() => setOpen(true)}
-          placeholder="Escribe nombre o email para buscar…"
-          autoComplete="off"
-          className={`w-full border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 ${
-            selected ? 'border-blue-900 bg-blue-50 text-blue-900 font-medium' : 'border-gray-200'
-          }`}
-        />
-        {selected && (
-          <button
-            type="button"
-            onClick={clear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-lg leading-none"
-            title="Limpiar selección"
-          >×</button>
-        )}
-      </div>
+      {selected.map(t => (
+        <input key={t.id} type="hidden" name="destinatario_email" value={t.email} />
+      ))}
 
-      {open && !selected && (
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {selected.map(t => (
+            <span key={t.id} className="inline-flex items-center gap-1 bg-blue-100 text-blue-900 text-xs px-2 py-1 rounded-full font-medium">
+              {t.nombre}
+              <button
+                type="button"
+                onClick={() => remove(t.id)}
+                className="text-blue-400 hover:text-blue-700 leading-none ml-0.5"
+              >×</button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        type="text"
+        value={query}
+        onChange={e => { setQuery(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        placeholder={selected.length > 0 ? 'Añadir otro destinatario…' : 'Escribe nombre o email para buscar…'}
+        autoComplete="off"
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+      />
+
+      {open && (
         <ul className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto">
           {filtered.length === 0 ? (
-            <li className="px-3 py-3 text-sm text-gray-400 text-center">Sin resultados</li>
+            <li className="px-3 py-3 text-sm text-gray-400 text-center">
+              {query.trim() ? 'Sin resultados' : 'Escribe para buscar'}
+            </li>
           ) : filtered.map(t => (
             <li
               key={t.id}
-              onMouseDown={() => select(t)}
+              onMouseDown={() => add(t)}
               className="px-3 py-2 cursor-pointer hover:bg-blue-50 flex flex-col border-b border-gray-50 last:border-0"
             >
               <span className="font-medium text-gray-800 text-sm">{t.nombre}</span>
@@ -244,8 +255,8 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const data = new FormData(e.currentTarget)
-    if (tipo === 'especifico' && !data.get('destinatario_email')) {
-      setMsg('❌ Debes seleccionar un trabajador de la lista.')
+    if (tipo === 'especifico' && data.getAll('destinatario_email').length === 0) {
+      setMsg('❌ Debes seleccionar al menos un trabajador de la lista.')
       setEstado('error')
       return
     }
@@ -350,7 +361,7 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
               : canSendDirect
                 ? tipo === 'todos'    ? '📨 Enviar a todos los trabajadores'
                 : tipo === 'comite'   ? '📨 Enviar a los miembros del comité'
-                :                      '📨 Enviar al trabajador seleccionado'
+                :                      '📨 Enviar a los trabajadores seleccionados'
                 : '📤 Solicitar aprobación a la Presidenta'}
           </button>
 

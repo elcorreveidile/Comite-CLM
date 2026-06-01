@@ -37,7 +37,7 @@ export async function getRole(email: string): Promise<'superadmin' | 'presidenta
 
 type DestinatarioTipo = 'todos' | 'comite' | 'especifico'
 
-async function resolverEmails(tipo: DestinatarioTipo, emailEspecifico?: string): Promise<{ emails: string[]; error?: string }> {
+async function resolverEmails(tipo: DestinatarioTipo, emailsEspecificos?: string[]): Promise<{ emails: string[]; error?: string }> {
   if (tipo === 'todos') {
     const { data } = await adminDb().from('trabajadores').select('email')
     const emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
@@ -53,8 +53,8 @@ async function resolverEmails(tipo: DestinatarioTipo, emailEspecifico?: string):
   }
 
   if (tipo === 'especifico') {
-    if (!emailEspecifico) return { emails: [], error: 'Debes seleccionar un destinatario.' }
-    return { emails: [emailEspecifico] }
+    if (!emailsEspecificos?.length) return { emails: [], error: 'Debes seleccionar al menos un destinatario.' }
+    return { emails: emailsEspecificos }
   }
 
   return { emails: [], error: 'Tipo de destinatario no válido.' }
@@ -64,9 +64,9 @@ async function enviarEmails(
   asunto: string,
   cuerpo: string,
   tipo: DestinatarioTipo,
-  emailEspecifico?: string,
+  emailsEspecificos?: string[],
 ): Promise<{ ok: boolean; count?: number; error?: string }> {
-  const { emails, error } = await resolverEmails(tipo, emailEspecifico)
+  const { emails, error } = await resolverEmails(tipo, emailsEspecificos)
   if (error || !emails.length) return { ok: false, error: error ?? 'Sin destinatarios.' }
 
   const htmlBody = `
@@ -82,7 +82,8 @@ async function enviarEmails(
       </p>
     </div>`
 
-  if (tipo === 'especifico') {
+  // Un único destinatario: usar to: para que reciba el email a su nombre
+  if (emails.length === 1) {
     const { error: resendErr } = await resend.emails.send({
       from: 'Comité CLM <no-reply@comiteclm.com>',
       to:   emails[0],
@@ -93,7 +94,7 @@ async function enviarEmails(
     return { ok: true, count: 1 }
   }
 
-  // Enviar en bloques de 50 (límite seguro de BCC)
+  // Múltiples destinatarios: BCC en bloques de 50
   const CHUNK = 50
   for (let i = 0; i < emails.length; i += CHUNK) {
     const chunk = emails.slice(i, i + CHUNK)
@@ -119,10 +120,10 @@ export async function crearYEnviar(formData: FormData) {
   if (role !== 'superadmin' && role !== 'presidenta')
     return { ok: false, error: 'No tienes permiso para enviar directamente.' }
 
-  const asunto          = String(formData.get('asunto')           ?? '').trim().slice(0, 300)
-  const cuerpo          = String(formData.get('cuerpo')           ?? '').trim().slice(0, 20000)
-  const tipo            = String(formData.get('destinatario_tipo') ?? 'todos') as DestinatarioTipo
-  const emailEspecifico = String(formData.get('destinatario_email') ?? '').trim() || undefined
+  const asunto             = String(formData.get('asunto')            ?? '').trim().slice(0, 300)
+  const cuerpo             = String(formData.get('cuerpo')            ?? '').trim().slice(0, 20000)
+  const tipo               = String(formData.get('destinatario_tipo') ?? 'todos') as DestinatarioTipo
+  const emailsEspecificos  = formData.getAll('destinatario_email').map(v => String(v).trim()).filter(Boolean)
 
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
 
@@ -132,7 +133,7 @@ export async function crearYEnviar(formData: FormData) {
     .select('id').single()
   if (dbErr || !com) return { ok: false, error: 'Error al guardar el comunicado.' }
 
-  const result = await enviarEmails(asunto, cuerpo, tipo, emailEspecifico)
+  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined)
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({
