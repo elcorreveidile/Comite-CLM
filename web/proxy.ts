@@ -36,7 +36,17 @@ export async function proxy(request: NextRequest) {
       return supabaseResponse
     }
     if (!user || !await isAdminUser(supabase, user.email ?? '')) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+      // Track unauthorized probe attempts and show progressively funnier responses
+      const probes = parseInt(request.cookies.get('_pa')?.value ?? '0')
+      const dest = probes >= 2 ? '/reincidente' : '/intento'
+      const res = NextResponse.redirect(new URL(dest, request.url))
+      res.cookies.set('_pa', String(probes + 1), {
+        httpOnly: true,
+        sameSite: 'strict',
+        path: '/',
+        maxAge: 60 * 60 * 24, // 24 h
+      })
+      return res
     }
     return supabaseResponse
   }

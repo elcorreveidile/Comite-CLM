@@ -184,6 +184,13 @@ export default function Home() {
               <Link href="/privacidad"   className="text-xs text-gray-300 hover:text-gray-500 transition-colors">Privacidad</Link>
               <Link href="/cookies"      className="text-xs text-gray-300 hover:text-gray-500 transition-colors">Cookies</Link>
             </div>
+            <p className="text-xs text-gray-300 mt-2">
+              Desarrollo web:{' '}
+              <a href="https://www.por2duros.com" target="_blank" rel="noopener noreferrer"
+                className="hover:text-gray-500 transition-colors underline underline-offset-2">
+                Por 2 duros
+              </a>
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <Image src="/logo-ccoo.jpg" alt="CCOO" width={60} height={20} style={{ height: '1.1rem', width: 'auto' }} className="object-contain opacity-50 hover:opacity-100 transition-opacity" />

@@ -68,7 +68,21 @@ export default function PrivacidadPage() {
           Adoptamos medidas técnicas y organizativas adecuadas para proteger sus datos: transmisión cifrada mediante HTTPS/TLS, autenticación mediante enlace seguro (magic link), acceso restringido a los datos por roles diferenciados.
         </p>
 
-        <p className="text-gray-400 text-xs mt-10">Última actualización: junio de 2026</p>
+        <div className="mt-10 rounded-xl border border-green-200 bg-green-50 p-4 flex items-start gap-3 not-prose">
+          <span className="text-xl mt-0.5" aria-hidden="true">🔒</span>
+          <div>
+            <p className="font-semibold text-green-800 text-sm">Sitio web auditado</p>
+            <p className="text-green-700 text-xs mt-1 leading-relaxed">
+              Este sitio ha superado una auditoría de seguridad que incluye: protección contra
+              inyección HTML, cabeceras HTTP de seguridad (HSTS, CSP, X-Frame-Options,
+              X-Content-Type-Options), validación y limitación de entradas en todos los formularios,
+              control de acceso basado en roles, y bloqueo de acceso anónimo a la base de datos
+              mediante políticas RLS. Los datos se alojan en servidores de la Unión Europea (Frankfurt).
+            </p>
+          </div>
+        </div>
+
+        <p className="text-gray-400 text-xs mt-6">Última actualización: junio de 2026</p>
       </main>
 
       <footer className="border-t py-6 px-4 text-center">
