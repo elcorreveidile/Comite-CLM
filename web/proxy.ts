@@ -17,11 +17,40 @@ function isScanPath(pathname: string): boolean {
   return SCAN_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
 }
 
-function probeRedirect(request: NextRequest): NextResponse {
-  const probes = parseInt(request.cookies.get('_pa')?.value ?? '0')
-  const dest = probes >= 2 ? '/reincidente' : '/intento'
+async function logIntento(request: NextRequest, intentoNum: number): Promise<void> {
+  try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+             ?? request.headers.get('x-real-ip')
+             ?? null
+    await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/intentos_acceso`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        ip,
+        path:        request.nextUrl.pathname,
+        user_agent:  request.headers.get('user-agent')                  ?? null,
+        intento_num: intentoNum,
+        pais:        request.headers.get('x-vercel-ip-country')         ?? null,
+        ciudad:      request.headers.get('x-vercel-ip-city')            ?? null,
+        region:      request.headers.get('x-vercel-ip-country-region')  ?? null,
+        latitud:     request.headers.get('x-vercel-ip-latitude')        ?? null,
+        longitud:    request.headers.get('x-vercel-ip-longitude')       ?? null,
+      }),
+    })
+  } catch {
+    // El registro es no crítico: fallar en silencio
+  }
+}
+
+function probeRedirect(request: NextRequest, intentoNum: number): NextResponse {
+  const dest = intentoNum > 3 ? '/reincidente' : '/intento'
   const res = NextResponse.redirect(new URL(dest, request.url))
-  res.cookies.set('_pa', String(probes + 1), {
+  res.cookies.set('_pa', String(intentoNum), {
     httpOnly: true,
     sameSite: 'strict',
     path: '/',
@@ -32,10 +61,12 @@ function probeRedirect(request: NextRequest): NextResponse {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+  const probes = parseInt(request.cookies.get('_pa')?.value ?? '0')
 
   // Intercept known attack/scanning paths before Vercel's own error handling
   if (isScanPath(pathname)) {
-    return probeRedirect(request)
+    await logIntento(request, probes + 1)
+    return probeRedirect(request, probes + 1)
   }
 
   let supabaseResponse = NextResponse.next({ request })
@@ -70,7 +101,8 @@ export async function proxy(request: NextRequest) {
       return supabaseResponse
     }
     if (!user || !await isAdminUser(supabase, user.email ?? '')) {
-      return probeRedirect(request)
+      await logIntento(request, probes + 1)
+      return probeRedirect(request, probes + 1)
     }
     return supabaseResponse
   }

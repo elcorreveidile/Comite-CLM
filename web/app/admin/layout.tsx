@@ -47,6 +47,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/documentos',  label: 'Documentos' },
     ...(puedeComunicados ? [{ href: '/admin/comunicados', label: 'Comunicados', color: '#60a5fa' }] : []),
     ...(isSuperAdmin      ? [{ href: '/admin/miembros',   label: 'Miembros',    color: '#F2B705' }] : []),
+    ...(isSuperAdmin      ? [{ href: '/admin/intentos',   label: 'Seguridad',   color: '#f87171' }] : []),
   ]
 
   return (

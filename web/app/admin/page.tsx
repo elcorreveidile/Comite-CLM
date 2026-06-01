@@ -1,5 +1,6 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { SUPER_ADMINS } from '@/lib/admins'
 
 function getAdmin() {
   return createAdminClient(
@@ -9,6 +10,10 @@ function getAdmin() {
 }
 
 export default async function AdminPage() {
+  const supabase = await import('@/lib/supabase/server').then(m => m.createClient())
+  const { data: { user } } = await supabase.auth.getUser()
+  const isSuperAdmin = SUPER_ADMINS.includes(user?.email ?? '')
+
   const admin = getAdmin()
 
   const [
@@ -18,6 +23,7 @@ export default async function AdminPage() {
     { count: propuestasPendientes },
     { count: totalDocumentos },
     { count: eventosProximos },
+    { count: totalIntentos },
   ] = await Promise.all([
     admin.from('trabajadores').select('*', { count: 'exact', head: true }),
     admin.from('avisos').select('*', { count: 'exact', head: true }),
@@ -25,6 +31,7 @@ export default async function AdminPage() {
     admin.from('propuestas').select('*', { count: 'exact', head: true }).eq('revisada', false),
     admin.from('documentos').select('*', { count: 'exact', head: true }),
     admin.from('eventos_calendario').select('*', { count: 'exact', head: true }).gte('fecha', new Date().toISOString().split('T')[0]),
+    admin.from('intentos_acceso').select('*', { count: 'exact', head: true }),
   ])
 
   const cards = [
@@ -34,6 +41,7 @@ export default async function AdminPage() {
     { label: 'Propuestas pendientes', value: propuestasPendientes ?? 0, href: '/admin/propuestas', color: propuestasPendientes ? '#C8102E' : '#003087' },
     { label: 'Documentos', value: totalDocumentos ?? 0, href: '/admin/documentos', color: '#003087' },
     { label: 'Próximos eventos', value: eventosProximos ?? 0, href: '/admin/calendario', color: '#003087' },
+    ...(isSuperAdmin ? [{ label: 'Intentos de acceso', value: totalIntentos ?? 0, href: '/admin/intentos', color: (totalIntentos ?? 0) > 0 ? '#ef4444' : '#003087' }] : []),
   ]
 
   return (
