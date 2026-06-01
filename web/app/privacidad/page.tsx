@@ -14,7 +14,7 @@ export default function PrivacidadPage() {
         <h2>1. Responsable del tratamiento</h2>
         <ul>
           <li><strong>Responsable:</strong> Comité de Empresa del Centro de Lenguas Modernas – Universidad de Granada</li>
-          <li><strong>Dirección:</strong> C/ Puentezuelas, 55 — 18002 Granada</li>
+          <li><strong>Dirección:</strong> Placeta del Hospicio Viejo, s/n — 18010 Granada</li>
           <li><strong>Contacto CCOO:</strong> ccoo@fyg.ugr.es</li>
           <li><strong>Contacto UGT:</strong> ugt@fyg.ugr.es</li>
         </ul>
