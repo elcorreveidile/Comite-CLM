@@ -18,7 +18,8 @@ export default function AvisoLegalPage() {
         <ul>
           <li><strong>Denominación:</strong> Comité de Empresa del CLM – Universidad de Granada</li>
           <li><strong>Dirección:</strong> C/ Puentezuelas, 55 — 18002 Granada</li>
-          <li><strong>Correo de contacto:</strong> comite@clm.ugr.es</li>
+          <li><strong>Correo de contacto (CCOO):</strong> ccoo@fyg.ugr.es</li>
+          <li><strong>Correo de contacto (UGT):</strong> ugt@fyg.ugr.es</li>
         </ul>
 
         <h2>2. Objeto</h2>

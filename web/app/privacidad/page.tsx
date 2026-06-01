@@ -15,7 +15,8 @@ export default function PrivacidadPage() {
         <ul>
           <li><strong>Responsable:</strong> Comité de Empresa del Centro de Lenguas Modernas – Universidad de Granada</li>
           <li><strong>Dirección:</strong> C/ Puentezuelas, 55 — 18002 Granada</li>
-          <li><strong>Contacto:</strong> comite@clm.ugr.es</li>
+          <li><strong>Contacto CCOO:</strong> ccoo@fyg.ugr.es</li>
+          <li><strong>Contacto UGT:</strong> ugt@fyg.ugr.es</li>
         </ul>
 
         <h2>2. Datos que recabamos y finalidades</h2>
@@ -49,7 +50,7 @@ export default function PrivacidadPage() {
         </ul>
 
         <h2>4. Derechos de los interesados</h2>
-        <p>Puede ejercer los siguientes derechos escribiendo a <strong>comite@clm.ugr.es</strong> con copia de su DNI o documento identificativo equivalente:</p>
+        <p>Puede ejercer los siguientes derechos escribiendo a <strong>ccoo@fyg.ugr.es</strong> o <strong>ugt@fyg.ugr.es</strong> con copia de su DNI o documento identificativo equivalente:</p>
         <ul>
           <li><strong>Acceso:</strong> conocer qué datos tratamos sobre usted.</li>
           <li><strong>Rectificación:</strong> corregir datos inexactos o incompletos.</li>
