@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar } from './actions'
+import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
 type DestinatarioTipo = 'todos' | 'comite' | 'especifico'
@@ -38,11 +38,15 @@ function Badge({ estado }: { estado: Comunicado['estado'] }) {
   )
 }
 
-function ComunicadoCard({ com, role }: { com: Comunicado; role: Role }) {
-  const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
+function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Role; enHistorial?: boolean }) {
+  const [loading, setLoading]     = useState(false)
+  const [deleting, setDeleting]   = useState(false)
+  const [confirmDel, setConfirmDel] = useState(false)
+  const [msg, setMsg]             = useState('')
+  const [eliminado, setEliminado] = useState(false)
 
   const canApprove = (role === 'presidenta' || role === 'superadmin') && com.estado === 'pendiente_aprobacion'
+  const canDelete  = (role === 'presidenta' || role === 'superadmin') && enHistorial
 
   async function handleAprobar() {
     setLoading(true)
@@ -58,11 +62,34 @@ function ComunicadoCard({ com, role }: { com: Comunicado; role: Role }) {
     setLoading(false)
   }
 
+  async function handleEliminar() {
+    setDeleting(true)
+    const res = await eliminarComunicado(com.id)
+    if (res.ok) {
+      setEliminado(true)
+    } else {
+      setMsg(`❌ ${res.error}`)
+      setDeleting(false)
+      setConfirmDel(false)
+    }
+  }
+
+  if (eliminado) return null
+
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3 mb-2">
         <p className="font-semibold text-gray-800">{com.asunto}</p>
-        <Badge estado={com.estado} />
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge estado={com.estado} />
+          {canDelete && !confirmDel && (
+            <button
+              onClick={() => setConfirmDel(true)}
+              className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none"
+              title="Eliminar"
+            >×</button>
+          )}
+        </div>
       </div>
       <p className="text-sm text-gray-500 whitespace-pre-wrap line-clamp-3 mb-3">{com.cuerpo}</p>
       <div className="flex items-center justify-between text-xs text-gray-400">
@@ -76,6 +103,25 @@ function ComunicadoCard({ com, role }: { com: Comunicado; role: Role }) {
       </div>
 
       {msg && <p className="mt-3 text-sm font-medium">{msg}</p>}
+
+      {confirmDel && (
+        <div className="mt-4 flex items-center gap-3 bg-red-50 rounded-lg px-3 py-2">
+          <p className="text-xs text-red-700 flex-1">¿Eliminar este comunicado del historial?</p>
+          <button
+            onClick={handleEliminar}
+            disabled={deleting}
+            className="text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg disabled:opacity-50"
+          >
+            {deleting ? 'Eliminando…' : 'Sí, eliminar'}
+          </button>
+          <button
+            onClick={() => setConfirmDel(false)}
+            className="text-xs text-gray-500 hover:text-gray-700"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
 
       {canApprove && !msg && (
         <div className="flex gap-2 mt-4">
@@ -355,7 +401,7 @@ export default function ComunicadosManager({
           <h2 className="font-bold text-gray-700 mb-3">Historial</h2>
           <div className="space-y-3">
             {historial.map(com => (
-              <ComunicadoCard key={com.id} com={com} role={role} />
+              <ComunicadoCard key={com.id} com={com} role={role} enHistorial />
             ))}
           </div>
         </div>

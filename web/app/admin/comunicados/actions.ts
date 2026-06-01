@@ -194,6 +194,20 @@ export async function aprobarYEnviar(id: string) {
   return { ok: true, count: result.count }
 }
 
+// ── Eliminar (Presidenta o Super Admin) ──────────────────────────────────
+export async function eliminarComunicado(id: string) {
+  const email = await getCurrentEmail()
+  if (!email) return { ok: false, error: 'No autenticado.' }
+
+  const role = await getRole(email)
+  if (role !== 'superadmin' && role !== 'presidenta')
+    return { ok: false, error: 'No autorizado.' }
+
+  await adminDb().from('comunicados').delete().eq('id', id)
+  revalidatePath('/admin/comunicados')
+  return { ok: true }
+}
+
 // ── Rechazar (Presidenta o Super Admin) ──────────────────────────────────
 export async function rechazar(id: string) {
   const email = await getCurrentEmail()
