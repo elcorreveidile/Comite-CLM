@@ -62,7 +62,7 @@ export default function CookiesPage() {
         </ul>
         <p>Tenga en cuenta que deshabilitar las cookies de sesión impedirá el acceso al panel de trabajadores.</p>
 
-        <p className="text-gray-400 text-xs mt-10">Última actualización: junio de 2025</p>
+        <p className="text-gray-400 text-xs mt-10">Última actualización: junio de 2026</p>
       </main>
 
       <footer className="border-t py-6 px-4 text-center">

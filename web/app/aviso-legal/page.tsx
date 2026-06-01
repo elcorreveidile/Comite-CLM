@@ -47,7 +47,7 @@ export default function AvisoLegalPage() {
           Las presentes condiciones se rigen por la legislación española. Para cualquier controversia serán competentes los Juzgados y Tribunales de Granada.
         </p>
 
-        <p className="text-gray-400 text-xs mt-10">Última actualización: junio de 2025</p>
+        <p className="text-gray-400 text-xs mt-10">Última actualización: junio de 2026</p>
       </main>
 
       <footer className="border-t py-6 px-4 text-center">
