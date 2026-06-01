@@ -69,7 +69,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-400 hidden sm:block truncate max-w-[180px]">{user.email}</span>
+              <Link href="/panel/perfil" className="text-xs text-gray-400 hidden sm:block truncate max-w-[180px] hover:text-gray-600 transition-colors">{user.email}</Link>
               <form action={signOut} className="hidden sm:block">
                 <button type="submit" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Salir</button>
               </form>

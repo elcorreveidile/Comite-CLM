@@ -14,6 +14,7 @@ const MAIN_ITEMS = [
 const MORE_ITEMS = [
   { href: '/panel/calendario', label: 'Calendario', icon: '📅' },
   { href: '/panel/documentos', label: 'Documentos', icon: '📁' },
+  { href: '/panel/perfil',     label: 'Mi perfil',  icon: '👤' },
 ]
 
 export default function PanelBottomNav({ onSignOut }: { onSignOut: () => void }) {
