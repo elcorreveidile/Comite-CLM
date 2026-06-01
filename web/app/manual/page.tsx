@@ -522,7 +522,7 @@ export default function ManualPage() {
                   ['Miembro del comité',   '✓','✓','—','—','—'],
                   ['Secretaria',           '✓','✓','—','—','—'],
                   ['Presidenta',           '✓','✓','✓','✓','—'],
-                  ['Secretario/a General', '✓','✓','✓','✓','✓'],
+                  ['Administrador web', '✓','✓','✓','✓','✓'],
                 ].map(([rol, ...rest]) => (
                   <tr key={rol} className="odd:bg-gray-50 text-gray-600">
                     <td className="px-3 py-2 text-left font-medium text-gray-800">{rol}</td>
