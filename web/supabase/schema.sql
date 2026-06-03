@@ -10,6 +10,7 @@ create table if not exists trabajadores (
   departamento text,
   telefono text,
   notas text,
+  baja_comunicados boolean not null default false,
   created_at timestamptz default now()
 );
 

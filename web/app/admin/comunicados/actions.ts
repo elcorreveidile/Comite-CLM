@@ -43,7 +43,7 @@ async function resolverEmails(
   departamento?: string,
 ): Promise<{ emails: string[]; error?: string }> {
   if (tipo === 'todos') {
-    const { data } = await adminDb().from('trabajadores').select('email')
+    const { data } = await adminDb().from('trabajadores').select('email').eq('baja_comunicados', false)
     const emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
     if (!emails.length) return { emails: [], error: 'No hay trabajadores activos registrados.' }
     return { emails }
@@ -58,7 +58,7 @@ async function resolverEmails(
 
   if (tipo === 'departamento') {
     if (!departamento) return { emails: [], error: 'Debes seleccionar un departamento.' }
-    const { data } = await adminDb().from('trabajadores').select('email').eq('departamento', departamento)
+    const { data } = await adminDb().from('trabajadores').select('email').eq('departamento', departamento).eq('baja_comunicados', false)
     const emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
     if (!emails.length) return { emails: [], error: `No hay trabajadores en el departamento "${departamento}".` }
     return { emails }
@@ -92,6 +92,9 @@ async function enviarEmails(
       </div>
       <p style="color:#9ca3af;font-size:12px;margin-top:16px;text-align:center">
         Centro de Lenguas Modernas · Universidad de Granada
+      </p>
+      <p style="color:#d1d5db;font-size:11px;margin-top:4px;text-align:center">
+        ¿No deseas recibir estos comunicados? <a href="https://comiteclm.com/panel/perfil" style="color:#d1d5db">Accede a tu perfil</a> para darte de baja.
       </p>
     </div>`
 

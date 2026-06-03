@@ -10,16 +10,17 @@ function adminDb() {
   )
 }
 
-export async function actualizarTelefono(formData: FormData) {
+export async function actualizarPerfil(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { ok: false, error: 'No autenticado.' }
 
-  const telefono = String(formData.get('telefono') ?? '').trim().slice(0, 20)
+  const telefono          = String(formData.get('telefono')          ?? '').trim().slice(0, 20)
+  const baja_comunicados  = formData.get('baja_comunicados') === 'true'
 
   const { error } = await adminDb()
     .from('trabajadores')
-    .update({ telefono: telefono || null })
+    .update({ telefono: telefono || null, baja_comunicados })
     .eq('email', user.email!)
 
   if (error) return { ok: false, error: 'Error al guardar. Inténtalo de nuevo.' }

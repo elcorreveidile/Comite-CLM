@@ -1,26 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { actualizarTelefono } from './actions'
+import { actualizarPerfil } from './actions'
 
 export default function PerfilForm({
   nombre,
   email,
   telefono: telefonoInicial,
+  bajaComunicados: bajaInicial,
 }: {
   nombre: string
   email: string
   telefono: string
+  bajaComunicados: boolean
 }) {
+  const [baja, setBaja]   = useState(bajaInicial)
   const [estado, setEstado] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [msg, setMsg]       = useState('')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setEstado('loading')
-    const res = await actualizarTelefono(new FormData(e.currentTarget))
+    const fd = new FormData(e.currentTarget)
+    fd.set('baja_comunicados', baja ? 'true' : 'false')
+    const res = await actualizarPerfil(fd)
     if (res.ok) {
-      setMsg('Teléfono guardado correctamente.')
+      setMsg('Perfil guardado correctamente.')
       setEstado('ok')
     } else {
       setMsg(res.error ?? 'Error inesperado.')
@@ -40,7 +45,7 @@ export default function PerfilForm({
         <p className="text-sm text-gray-800">{email}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="telefono" className="block text-xs font-medium text-gray-600 mb-1">
             Teléfono / WhatsApp
@@ -57,6 +62,23 @@ export default function PerfilForm({
           <p className="text-xs text-gray-400 mt-1">
             Opcional. Solo visible para los miembros del comité.
           </p>
+        </div>
+
+        <div className="border-t border-gray-100 pt-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={baja}
+              onChange={e => { setBaja(e.target.checked); setEstado('idle'); setMsg('') }}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-red-600"
+            />
+            <div>
+              <span className="text-sm font-medium text-gray-700">Darme de baja de los comunicados</span>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Ya no recibirás los correos de comunicados del comité. Puedes volver a suscribirte en cualquier momento.
+              </p>
+            </div>
+          </label>
         </div>
 
         {estado === 'ok'    && <p className="text-sm text-green-600">{msg}</p>}

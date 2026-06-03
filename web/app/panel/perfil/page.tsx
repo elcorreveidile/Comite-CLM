@@ -14,7 +14,7 @@ export default async function PerfilPage() {
   )
   const { data: trabajador } = await admin
     .from('trabajadores')
-    .select('nombre, telefono')
+    .select('nombre, telefono, baja_comunicados')
     .eq('email', user.email!)
     .single()
 
@@ -28,6 +28,7 @@ export default async function PerfilPage() {
         nombre={trabajador?.nombre ?? ''}
         email={user.email!}
         telefono={trabajador?.telefono ?? ''}
+        bajaComunicados={trabajador?.baja_comunicados ?? false}
       />
     </div>
   )
