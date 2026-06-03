@@ -1,34 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { ALLOWED_ADMINS } from '@/lib/admins'
+import { enviarOtpAdmin } from './actions'
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('')
+  const [email, setEmail]   = useState('')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [sent, setSent]     = useState(false)
+  const [error, setError]   = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const normalized = email.trim().toLowerCase()
-    if (!ALLOWED_ADMINS.includes(normalized)) {
-      setError('Este correo no tiene acceso de administrador.')
-      return
-    }
     setLoading(true)
     setError(null)
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email: normalized,
-      options: { emailRedirectTo: `${location.origin}/auth/callback?next=/admin` },
-    })
+    const res = await enviarOtpAdmin(email, location.origin)
     setLoading(false)
-    if (authError) {
-      setError('Error al enviar el enlace. Inténtalo de nuevo.')
-    } else {
+    if (res.ok) {
       setSent(true)
+    } else {
+      setError(res.error ?? 'Error inesperado.')
     }
   }
 
