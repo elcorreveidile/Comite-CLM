@@ -2,6 +2,7 @@
 
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { SUPER_ADMINS } from '@/lib/admins'
+import { headers } from 'next/headers'
 
 function adminDb() {
   return createAdminClient(
@@ -12,8 +13,9 @@ function adminDb() {
 
 export async function enviarOtpAdmin(
   email: string,
-  origin: string,
 ): Promise<{ ok: boolean; error?: string }> {
+  const hdrs = await headers()
+  const origin = hdrs.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://comiteclm.com'
   const normalized = email.trim().toLowerCase()
 
   // Validate server-side — never expose the list to the client

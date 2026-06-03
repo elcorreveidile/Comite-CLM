@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/require-admin'
 
 function getAdmin() {
   return createAdminClient(
@@ -14,6 +15,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const TIME_RE = /^\d{2}:\d{2}$/
 
 export async function crearEvento(formData: FormData) {
+  if (!await requireAdmin()) return { error: 'No autorizado.' }
   const titulo      = (formData.get('titulo')      as string).trim().slice(0, 300)
   const fecha       = (formData.get('fecha')       as string).trim()
   const hora        = (formData.get('hora')        as string).trim() || null
@@ -30,6 +32,7 @@ export async function crearEvento(formData: FormData) {
 }
 
 export async function actualizarEvento(id: number, formData: FormData) {
+  if (!await requireAdmin()) return { error: 'No autorizado.' }
   const titulo      = (formData.get('titulo')      as string).trim().slice(0, 300)
   const fecha       = (formData.get('fecha')       as string).trim()
   const hora        = (formData.get('hora')        as string).trim() || null
@@ -46,6 +49,7 @@ export async function actualizarEvento(id: number, formData: FormData) {
 }
 
 export async function eliminarEvento(id: number) {
+  if (!await requireAdmin()) return
   await getAdmin().from('eventos_calendario').delete().eq('id', id)
   revalidatePath('/admin/calendario')
   revalidatePath('/panel/calendario')

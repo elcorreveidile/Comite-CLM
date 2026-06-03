@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 import { SUPER_ADMINS, SAFE_IPS } from '@/lib/admins'
 
@@ -110,12 +111,12 @@ export async function proxy(request: NextRequest) {
   // Admin routes
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin/login') {
-      if (user && await isAdminUser(supabase, user.email ?? '')) {
+      if (user && await isAdminUser(user.email ?? '')) {
         return NextResponse.redirect(new URL('/admin', request.url))
       }
       return supabaseResponse
     }
-    if (!user || !await isAdminUser(supabase, user.email ?? '')) {
+    if (!user || !await isAdminUser(user.email ?? '')) {
       if (!isSafeIp) {
         await logIntento(request, probes + 1)
         return probeRedirect(request, probes + 1)
@@ -142,13 +143,14 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse
 }
 
-async function isAdminUser(
-  supabase: ReturnType<typeof createServerClient>,
-  email: string
-): Promise<boolean> {
+async function isAdminUser(email: string): Promise<boolean> {
   if (SUPER_ADMINS.includes(email)) return true
   try {
-    const { data } = await supabase
+    const admin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+    const { data } = await admin
       .from('miembros_comite')
       .select('id')
       .eq('email', email)
@@ -156,7 +158,6 @@ async function isAdminUser(
       .maybeSingle()
     return !!data
   } catch {
-    // Denegar acceso si no se puede verificar con la base de datos
     return false
   }
 }

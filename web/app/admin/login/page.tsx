@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const res = await enviarOtpAdmin(email, location.origin)
+    const res = await enviarOtpAdmin(email)
     setLoading(false)
     if (res.ok) {
       setSent(true)

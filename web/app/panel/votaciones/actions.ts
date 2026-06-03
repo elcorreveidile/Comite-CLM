@@ -28,6 +28,15 @@ export async function votar(votacionId: number, opcion: string) {
 
   if (votoExistente) return { error: 'Ya has votado en esta consulta.' }
 
+  // Validate option and poll state server-side
+  const { data: votacion } = await admin
+    .from('votaciones')
+    .select('opciones, activa')
+    .eq('id', votacionId)
+    .single()
+  if (!votacion?.activa) return { error: 'Esta votación no está activa.' }
+  if (!votacion.opciones.includes(opcion)) return { error: 'Opción no válida.' }
+
   const { error } = await admin.from('votos').insert({
     votacion_id: votacionId,
     opcion,

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/require-admin'
 
 function getAdmin() {
   return createAdminClient(
@@ -13,6 +14,7 @@ function getAdmin() {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function crearTrabajador(formData: FormData) {
+  if (!await requireAdmin()) return { error: 'No autorizado.' }
   const nombre      = (formData.get('nombre')      as string).trim().slice(0, 200)
   const email       = (formData.get('email')       as string).trim().toLowerCase().slice(0, 200)
   const departamento= (formData.get('departamento')as string).trim().slice(0, 200) || null
@@ -32,6 +34,7 @@ export async function crearTrabajador(formData: FormData) {
 }
 
 export async function actualizarTrabajador(id: number, formData: FormData) {
+  if (!await requireAdmin()) return { error: 'No autorizado.' }
   const nombre      = (formData.get('nombre')      as string).trim().slice(0, 200)
   const email       = (formData.get('email')       as string).trim().toLowerCase().slice(0, 200)
   const departamento= (formData.get('departamento')as string).trim().slice(0, 200) || null
@@ -52,6 +55,7 @@ export async function actualizarTrabajador(id: number, formData: FormData) {
 }
 
 export async function eliminarTrabajador(id: number) {
+  if (!await requireAdmin()) return
   await getAdmin().from('trabajadores').delete().eq('id', id)
   revalidatePath('/admin/trabajadores')
 }

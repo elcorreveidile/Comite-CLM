@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/require-admin'
 
 function getAdmin() {
   return createAdminClient(
@@ -65,6 +66,7 @@ async function borrarArchivo(url: string) {
 }
 
 export async function crearDocumento(formData: FormData) {
+  if (!await requireAdmin()) return { error: 'No autorizado.' }
   try {
     const titulo = ((formData.get('titulo') ?? '') as string).trim()
     const descripcion = ((formData.get('descripcion') ?? '') as string).trim() || null
@@ -72,6 +74,9 @@ export async function crearDocumento(formData: FormData) {
     if (!titulo) return { error: 'El título es obligatorio.' }
 
     let url: string | null = ((formData.get('url') ?? '') as string).trim() || null
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+      return { error: 'La URL debe comenzar con http:// o https://' }
+    }
     const file = formData.get('file') as File | null
     if (file && file.size > 0) {
       try { url = await subirArchivo(file) } catch (e: unknown) {
@@ -94,6 +99,7 @@ export async function crearDocumento(formData: FormData) {
 }
 
 export async function actualizarDocumento(id: number, formData: FormData) {
+  if (!await requireAdmin()) return { error: 'No autorizado.' }
   try {
     const titulo = ((formData.get('titulo') ?? '') as string).trim()
     const descripcion = ((formData.get('descripcion') ?? '') as string).trim() || null
@@ -101,6 +107,9 @@ export async function actualizarDocumento(id: number, formData: FormData) {
     if (!titulo) return { error: 'El título es obligatorio.' }
 
     let url: string | null = ((formData.get('url') ?? '') as string).trim() || null
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+      return { error: 'La URL debe comenzar con http:// o https://' }
+    }
     const file = formData.get('file') as File | null
     if (file && file.size > 0) {
       const urlAnterior = formData.get('urlAnterior') as string | null
@@ -125,6 +134,7 @@ export async function actualizarDocumento(id: number, formData: FormData) {
 }
 
 export async function eliminarDocumento(id: number, url?: string | null) {
+  if (!await requireAdmin()) return
   if (url) await borrarArchivo(url)
   await getAdmin().from('documentos').delete().eq('id', id)
   revalidatePath('/admin/documentos')

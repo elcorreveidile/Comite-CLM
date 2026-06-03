@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/require-admin'
 
 function getAdmin() {
   return createAdminClient(
@@ -11,6 +12,7 @@ function getAdmin() {
 }
 
 export async function crearVotacion(formData: FormData) {
+  if (!await requireAdmin()) return { error: 'No autorizado.' }
   const titulo      = (formData.get('titulo')      as string).trim().slice(0, 300)
   const descripcion = (formData.get('descripcion') as string).trim().slice(0, 2000) || null
   const opcionesRaw = formData.getAll('opcion') as string[]
@@ -26,12 +28,14 @@ export async function crearVotacion(formData: FormData) {
 }
 
 export async function toggleVotacion(id: number, activa: boolean) {
+  if (!await requireAdmin()) return
   await getAdmin().from('votaciones').update({ activa }).eq('id', id)
   revalidatePath('/admin/votaciones')
   revalidatePath('/panel/votaciones')
 }
 
 export async function eliminarVotacion(id: number) {
+  if (!await requireAdmin()) return
   await getAdmin().from('votaciones').delete().eq('id', id)
   revalidatePath('/admin/votaciones')
   revalidatePath('/panel/votaciones')
