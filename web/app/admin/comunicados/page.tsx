@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import { getRole } from './actions'
+import { SUPER_ADMINS } from '@/lib/admins'
 import ComunicadosManager from './ComunicadosManager'
 
 export default async function ComunicadosPage() {
@@ -17,13 +18,14 @@ export default async function ComunicadosPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const [{ data: todos }, { data: trabajadores }] = await Promise.all([
+  const [{ data: todos }, { data: trabajadoresRaw }] = await Promise.all([
     admin.from('comunicados').select('*').order('created_at', { ascending: false }),
     admin.from('trabajadores').select('id, nombre, email, departamento').order('nombre'),
   ])
 
-  const pendientes = (todos ?? []).filter((c: any) => c.estado === 'pendiente_aprobacion')
-  const historial  = (todos ?? []).filter((c: any) => c.estado !== 'pendiente_aprobacion')
+  const pendientes  = (todos ?? []).filter((c: any) => c.estado === 'pendiente_aprobacion')
+  const historial   = (todos ?? []).filter((c: any) => c.estado !== 'pendiente_aprobacion')
+  const trabajadores = (trabajadoresRaw ?? []).filter((t: any) => !SUPER_ADMINS.includes(t.email))
 
   return (
     <div className="max-w-3xl mx-auto">
