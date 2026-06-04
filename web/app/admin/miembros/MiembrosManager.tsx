@@ -66,7 +66,7 @@ export default function MiembrosManager({ miembros }: { miembros: Miembro[] }) {
     await reactivateMiembro(id)
   }
 
-  const FormFields = () => (
+  const formFields = (
     <div className="grid grid-cols-2 gap-3 mb-3">
       <div>
         <label className="block text-xs text-gray-500 mb-1">Nombre completo</label>
@@ -118,7 +118,7 @@ export default function MiembrosManager({ miembros }: { miembros: Miembro[] }) {
       {adding && (
         <form onSubmit={handleAdd} className="bg-white border border-blue-200 rounded-lg p-4 mb-4">
           <h3 className="font-semibold mb-3 text-sm">Nuevo miembro</h3>
-          <FormFields />
+          {formFields}
           <div className="flex gap-2">
             <button type="submit" disabled={loading} style={{ backgroundColor: '#003087' }}
               className="text-white text-sm px-4 py-1.5 rounded font-medium disabled:opacity-50">
@@ -149,7 +149,7 @@ export default function MiembrosManager({ miembros }: { miembros: Miembro[] }) {
                 {editing === m.id ? (
                   <td colSpan={5} className="px-4 py-3">
                     <form onSubmit={e => handleUpdate(e, m.id)}>
-                      <FormFields />
+                      {formFields}
                       <div className="flex gap-2">
                         <button type="submit" disabled={loading} style={{ backgroundColor: '#003087' }}
                           className="text-white text-xs px-3 py-1.5 rounded disabled:opacity-50">
