@@ -32,38 +32,32 @@ export default function MiembrosManager({ miembros }: { miembros: Miembro[] }) {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    try {
-      await addMiembro({ ...form, cargo: form.cargo || undefined })
-      setAdding(false)
-      setForm(emptyForm)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al añadir')
-    } finally {
-      setLoading(false)
-    }
+    const result = await addMiembro({ ...form, cargo: form.cargo || undefined })
+    setLoading(false)
+    if (result?.error) { setError(result.error); return }
+    setAdding(false)
+    setForm(emptyForm)
   }
 
   async function handleUpdate(e: React.FormEvent, id: number) {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    try {
-      await updateMiembro(id, { ...form, cargo: form.cargo || undefined })
-      setEditing(null)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar')
-    } finally {
-      setLoading(false)
-    }
+    const result = await updateMiembro(id, { ...form, cargo: form.cargo || undefined })
+    setLoading(false)
+    if (result?.error) { setError(result.error); return }
+    setEditing(null)
   }
 
   async function handleDeactivate(id: number) {
     if (!confirm('¿Desactivar este miembro? Perderá acceso al panel de administración.')) return
-    await deactivateMiembro(id)
+    const result = await deactivateMiembro(id)
+    if (result?.error) setError(result.error)
   }
 
   async function handleReactivate(id: number) {
-    await reactivateMiembro(id)
+    const result = await reactivateMiembro(id)
+    if (result?.error) setError(result.error)
   }
 
   const formFields = (
