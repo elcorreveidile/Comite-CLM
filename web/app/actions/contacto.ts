@@ -8,11 +8,19 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function enviarContacto(formData: FormData) {
-  const nombre  = String(formData.get('nombre')  ?? '').trim().slice(0, 200)
-  const correo  = String(formData.get('correo')   ?? '').trim().slice(0, 200)
-  const asunto  = String(formData.get('asunto')   ?? '').trim().slice(0, 300)
-  const mensaje = String(formData.get('mensaje')  ?? '').trim().slice(0, 5000)
+  const honeypot = String(formData.get('website') ?? '').trim()
+  const human    = formData.get('human')
+  const nombre   = String(formData.get('nombre')  ?? '').trim().slice(0, 200)
+  const correo   = String(formData.get('correo')  ?? '').trim().slice(0, 200)
+  const asunto   = String(formData.get('asunto')  ?? '').trim().slice(0, 300)
+  const mensaje  = String(formData.get('mensaje') ?? '').trim().slice(0, 5000)
 
+  // Honeypot: bots fill hidden fields, humans don't see them
+  if (honeypot) return { ok: true }
+
+  if (human !== 'on') {
+    return { ok: false, error: 'Por favor confirma que eres una persona real.' }
+  }
   if (!nombre || !correo || !mensaje) {
     return { ok: false, error: 'Por favor completa todos los campos obligatorios.' }
   }
