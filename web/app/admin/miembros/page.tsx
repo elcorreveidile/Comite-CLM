@@ -23,7 +23,5 @@ export default async function MiembrosPage() {
     .order('sindicato')
     .order('nombre')
 
-  const filtered = (miembros ?? []).filter((m: any) => !SUPER_ADMINS.includes(m.email))
-
-  return <MiembrosManager miembros={filtered} />
+  return <MiembrosManager miembros={miembros ?? []} />
 }
