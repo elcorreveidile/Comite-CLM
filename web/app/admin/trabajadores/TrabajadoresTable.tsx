@@ -74,6 +74,36 @@ export default function TrabajadoresTable({ trabajadores: init }: Props) {
     })
   }
 
+  function exportarMd() {
+    const fecha = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const grupos: Record<string, Trabajador[]> = {}
+    for (const t of trabajadores) {
+      const dep = t.departamento?.trim() || 'Sin departamento'
+      ;(grupos[dep] ??= []).push(t)
+    }
+    const deps = Object.keys(grupos).sort((a, b) =>
+      a === 'Sin departamento' ? 1 : b === 'Sin departamento' ? -1 : a.localeCompare(b, 'es')
+    )
+    let md = `# Censo de Trabajadores — CLM\n*Exportado el ${fecha}*\n\n---\n\n`
+    for (const dep of deps) {
+      md += `## ${dep}\n\n`
+      for (const t of grupos[dep].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))) {
+        md += `- **${t.nombre}** — ${t.email}`
+        if (t.telefono) md += ` · ${t.telefono}`
+        md += '\n'
+      }
+      md += '\n'
+    }
+    md += `---\n*Total: ${trabajadores.length} trabajadores*\n`
+    const blob = new Blob([md], { type: 'text/markdown; charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `censo-clm-${fecha.replace(/\//g, '-')}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -84,6 +114,12 @@ export default function TrabajadoresTable({ trabajadores: init }: Props) {
           onChange={e => setBusqueda(e.target.value)}
           className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm"
         />
+        <button
+          onClick={exportarMd}
+          className="text-sm px-4 py-2 rounded border border-gray-300 hover:bg-gray-50 transition-colors whitespace-nowrap text-gray-600"
+        >
+          Exportar .md
+        </button>
         <button
           onClick={abrirNuevo}
           style={{ backgroundColor: '#003087' }}
