@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { SUPER_ADMINS } from '@/lib/admins'
 import { headers } from 'next/headers'
 
@@ -30,10 +31,10 @@ export async function enviarOtpAdmin(
     if (!data) return { ok: false, error: 'Este correo no tiene acceso de administrador.' }
   }
 
-  const supabase = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
+  // Use the SSR client so Supabase uses PKCE flow (stores code_verifier in cookie).
+  // The vanilla anon client uses implicit flow (token in URL hash), which the
+  // server-side callback route cannot read.
+  const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({
     email: normalized,
     options: { emailRedirectTo: `${origin}/auth/callback?next=/admin` },

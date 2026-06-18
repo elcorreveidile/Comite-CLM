@@ -40,6 +40,11 @@ export default function ContactForm() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="max-w-lg mx-auto text-left space-y-4">
+      {/* Honeypot — invisible to humans, bots fill it automatically */}
+      <div style={{ position: 'absolute', left: '-9999px', height: 0, overflow: 'hidden' }} aria-hidden="true">
+        <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+      </div>
+
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Nombre *</label>
@@ -80,6 +85,19 @@ export default function ContactForm() {
           placeholder="Escribe tu consulta o propuesta..."
           className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-none"
         />
+      </div>
+
+      <div className="flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+        <input
+          type="checkbox"
+          id="human"
+          name="human"
+          required
+          className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer accent-blue-900 shrink-0"
+        />
+        <label htmlFor="human" className="text-sm text-gray-600 cursor-pointer select-none leading-snug">
+          Confirmo que soy una persona real y no un programa automático
+        </label>
       </div>
 
       {estado === 'error' && (
