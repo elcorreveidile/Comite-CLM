@@ -74,33 +74,57 @@ export default function TrabajadoresTable({ trabajadores: init }: Props) {
     })
   }
 
-  function exportarMd() {
+  const COLUMNAS = [
+    { key: 'nombre',       label: 'Nombre' },
+    { key: 'email',        label: 'Correo' },
+    { key: 'departamento', label: 'Departamento' },
+    { key: 'telefono',     label: 'Teléfono' },
+  ] as const
+
+  type ColKey = typeof COLUMNAS[number]['key']
+
+  const [exportModal, setExportModal] = useState(false)
+  const [colsSel, setColsSel] = useState<Set<ColKey>>(new Set(['nombre', 'email', 'departamento']))
+
+  function toggleCol(k: ColKey) {
+    setColsSel(prev => {
+      const next = new Set(prev)
+      next.has(k) ? next.delete(k) : next.add(k)
+      return next
+    })
+  }
+
+  function ejecutarExport() {
     const fecha = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    const grupos: Record<string, Trabajador[]> = {}
-    for (const t of trabajadores) {
-      const dep = t.departamento?.trim() || 'Sin departamento'
-      ;(grupos[dep] ??= []).push(t)
+    const cols = COLUMNAS.filter(c => colsSel.has(c.key))
+
+    // Si solo se selecciona departamento, exportar lista de valores únicos
+    if (cols.length === 1 && cols[0].key === 'departamento') {
+      const deps = [...new Set(
+        trabajadores.map(t => t.departamento?.trim()).filter((d): d is string => !!d)
+      )].sort((a, b) => a.localeCompare(b, 'es'))
+      let md = `# Departamentos — CLM\n*Exportado el ${fecha}*\n\n`
+      for (const d of deps) md += `- ${d}\n`
+      md += `\n---\n*${deps.length} departamentos*\n`
+      descargar(md, `departamentos-clm-${fecha.replace(/\//g, '-')}.md`)
+    } else {
+      // Tabla markdown con las columnas elegidas
+      const header = '| ' + cols.map(c => c.label).join(' | ') + ' |'
+      const sep    = '| ' + cols.map(() => '---').join(' | ') + ' |'
+      const rows = [...trabajadores]
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+        .map(t => '| ' + cols.map(c => (t[c.key] ?? '—').replace(/\|/g, '\\|')).join(' | ') + ' |')
+      let md = `# Trabajadores — CLM\n*Exportado el ${fecha}*\n\n${header}\n${sep}\n${rows.join('\n')}\n\n---\n*${trabajadores.length} trabajadores*\n`
+      descargar(md, `trabajadores-clm-${fecha.replace(/\//g, '-')}.md`)
     }
-    const deps = Object.keys(grupos).sort((a, b) =>
-      a === 'Sin departamento' ? 1 : b === 'Sin departamento' ? -1 : a.localeCompare(b, 'es')
-    )
-    let md = `# Censo de Trabajadores — CLM\n*Exportado el ${fecha}*\n\n---\n\n`
-    for (const dep of deps) {
-      md += `## ${dep}\n\n`
-      for (const t of grupos[dep].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))) {
-        md += `- **${t.nombre}** — ${t.email}`
-        if (t.telefono) md += ` · ${t.telefono}`
-        md += '\n'
-      }
-      md += '\n'
-    }
-    md += `---\n*Total: ${trabajadores.length} trabajadores*\n`
-    const blob = new Blob([md], { type: 'text/markdown; charset=utf-8' })
+    setExportModal(false)
+  }
+
+  function descargar(contenido: string, nombre: string) {
+    const blob = new Blob([contenido], { type: 'text/markdown; charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url
-    a.download = `censo-clm-${fecha.replace(/\//g, '-')}.md`
-    a.click()
+    a.href = url; a.download = nombre; a.click()
     URL.revokeObjectURL(url)
   }
 
@@ -115,7 +139,7 @@ export default function TrabajadoresTable({ trabajadores: init }: Props) {
           className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm"
         />
         <button
-          onClick={exportarMd}
+          onClick={() => setExportModal(true)}
           className="text-sm px-4 py-2 rounded border border-gray-300 hover:bg-gray-50 transition-colors whitespace-nowrap text-gray-600"
         >
           Exportar .md
@@ -184,6 +208,40 @@ export default function TrabajadoresTable({ trabajadores: init }: Props) {
           <p className="text-center text-gray-400 text-sm py-8">Sin resultados</p>
         )}
       </div>
+
+      {/* Modal exportar */}
+      {exportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h2 className="font-bold text-lg mb-4">Exportar columnas</h2>
+            <p className="text-sm text-gray-500 mb-4">Selecciona las columnas a incluir en el archivo .md:</p>
+            <div className="flex flex-col gap-3 mb-6">
+              {COLUMNAS.map(c => (
+                <label key={c.key} className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={colsSel.has(c.key)}
+                    onChange={() => toggleCol(c.key)}
+                    className="w-4 h-4 rounded"
+                  />
+                  <span className="text-sm">{c.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setExportModal(false)} className="text-sm px-4 py-2 border rounded hover:bg-gray-50">Cancelar</button>
+              <button
+                onClick={ejecutarExport}
+                disabled={colsSel.size === 0}
+                style={{ backgroundColor: '#003087' }}
+                className="text-sm text-white px-4 py-2 rounded hover:opacity-90 disabled:opacity-50"
+              >
+                Descargar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {modal.open && (
