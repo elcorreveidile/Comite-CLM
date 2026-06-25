@@ -32,6 +32,22 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '20mb',
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'comiteclm.com' }],
+        destination: 'https://ugt.comiteclm.com/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.comiteclm.com' }],
+        destination: 'https://ugt.comiteclm.com/:path*',
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     return [
       {
