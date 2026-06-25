@@ -437,7 +437,7 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
       setAdjuntos([])
       setProgramadoAt('')
     } else {
-      setMsg(`❌ ${res.error}`)
+      setMsg(`❌ ${'error' in res ? res.error : 'Error inesperado.'}`)
       setEstado('error')
     }
   }
