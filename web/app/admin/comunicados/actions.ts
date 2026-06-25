@@ -8,6 +8,7 @@ import { escapeHtml } from '@/lib/html'
 import { revalidatePath } from 'next/cache'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+const BUCKET = 'comunicados-adjuntos'
 
 function adminDb() {
   return createAdminClient(
@@ -36,6 +37,56 @@ export async function getRole(email: string): Promise<'superadmin' | 'presidenta
 }
 
 type DestinatarioTipo = 'todos' | 'comite' | 'especifico' | 'departamento'
+export type Adjunto = { name: string; path: string; size: number }
+
+// ── Storage helpers ───────────────────────────────────────────────────────────
+
+async function ensureBucket() {
+  try {
+    await adminDb().storage.createBucket(BUCKET, {
+      public: false,
+      fileSizeLimit: 10 * 1024 * 1024, // 10 MB por archivo
+    })
+  } catch {
+    // Ya existe, ignorar
+  }
+}
+
+async function subirAdjuntos(files: File[], comunicadoId: string): Promise<Adjunto[]> {
+  if (!files.length) return []
+  await ensureBucket()
+  const db = adminDb()
+  const adjuntos: Adjunto[] = []
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    const safeName = file.name.replace(/[^a-zA-Z0-9._\-áéíóúüñÁÉÍÓÚÜÑ ]/g, '_')
+    const path = `${comunicadoId}/${i}_${safeName}`
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const { error } = await db.storage.from(BUCKET).upload(path, buffer, { contentType: file.type, upsert: true })
+    if (!error) adjuntos.push({ name: file.name, path, size: file.size })
+  }
+  return adjuntos
+}
+
+async function descargarAdjuntos(adjuntos: Adjunto[]): Promise<Array<{ filename: string; content: Buffer }>> {
+  if (!adjuntos.length) return []
+  const db = adminDb()
+  const result = []
+  for (const adj of adjuntos) {
+    const { data, error } = await db.storage.from(BUCKET).download(adj.path)
+    if (!error && data) {
+      result.push({ filename: adj.name, content: Buffer.from(await data.arrayBuffer()) })
+    }
+  }
+  return result
+}
+
+async function limpiarAdjuntos(adjuntos: Adjunto[]) {
+  if (!adjuntos.length) return
+  await adminDb().storage.from(BUCKET).remove(adjuntos.map(a => a.path))
+}
+
+// ── Email helpers ─────────────────────────────────────────────────────────────
 
 async function resolverEmails(
   tipo: DestinatarioTipo,
@@ -78,6 +129,7 @@ async function enviarEmails(
   tipo: DestinatarioTipo,
   emailsEspecificos?: string[],
   departamento?: string,
+  attachments?: Array<{ filename: string; content: Buffer }>,
 ): Promise<{ ok: boolean; count?: number; error?: string }> {
   const { emails, error } = await resolverEmails(tipo, emailsEspecificos, departamento)
   if (error || !emails.length) return { ok: false, error: error ?? 'Sin destinatarios.' }
@@ -98,19 +150,20 @@ async function enviarEmails(
       </p>
     </div>`
 
-  // Un único destinatario: usar to: para que reciba el email a su nombre
+  const extraOpts = attachments?.length ? { attachments } : {}
+
   if (emails.length === 1) {
     const { error: resendErr } = await resend.emails.send({
       from: 'Comité CLM <no-reply@comiteclm.com>',
       to:   emails[0],
       subject: asunto,
       html: htmlBody,
+      ...extraOpts,
     })
     if (resendErr) return { ok: false, error: 'Error al enviar el comunicado. Contacta con soporte.' }
     return { ok: true, count: 1 }
   }
 
-  // Múltiples destinatarios: BCC en bloques de 50
   const CHUNK = 50
   for (let i = 0; i < emails.length; i += CHUNK) {
     const chunk = emails.slice(i, i + CHUNK)
@@ -120,6 +173,7 @@ async function enviarEmails(
       bcc:  chunk,
       subject: asunto,
       html: htmlBody,
+      ...extraOpts,
     })
     if (resendErr) return { ok: false, error: 'Error al enviar el comunicado. Contacta con soporte.' }
   }
@@ -127,7 +181,7 @@ async function enviarEmails(
   return { ok: true, count: emails.length }
 }
 
-// ── Envío directo (Presidenta o Super Admin) ──────────────────────────────
+// ── Envío directo (Presidenta o Super Admin) ──────────────────────────────────
 export async function crearYEnviar(formData: FormData) {
   const email = await getCurrentEmail()
   if (!email) return { ok: false, error: 'No autenticado.' }
@@ -136,13 +190,16 @@ export async function crearYEnviar(formData: FormData) {
   if (role !== 'superadmin' && role !== 'presidenta')
     return { ok: false, error: 'No tienes permiso para enviar directamente.' }
 
-  const asunto             = String(formData.get('asunto')            ?? '').trim().slice(0, 300)
-  const cuerpo             = String(formData.get('cuerpo')            ?? '').trim().slice(0, 20000)
-  const tipo               = String(formData.get('destinatario_tipo') ?? 'todos') as DestinatarioTipo
-  const emailsEspecificos  = formData.getAll('destinatario_email').map(v => String(v).trim()).filter(Boolean)
-  const departamento       = String(formData.get('destinatario_departamento') ?? '').trim() || undefined
+  const asunto            = String(formData.get('asunto')            ?? '').trim().slice(0, 300)
+  const cuerpo            = String(formData.get('cuerpo')            ?? '').trim().slice(0, 20000)
+  const tipo              = String(formData.get('destinatario_tipo') ?? 'todos') as DestinatarioTipo
+  const emailsEspecificos = formData.getAll('destinatario_email').map(v => String(v).trim()).filter(Boolean)
+  const departamento      = String(formData.get('destinatario_departamento') ?? '').trim() || undefined
 
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
+
+  const filesRaw = formData.getAll('adjuntos') as unknown as File[]
+  const files = filesRaw.filter(f => f instanceof File && f.size > 0)
 
   const { data: com, error: dbErr } = await adminDb()
     .from('comunicados')
@@ -150,7 +207,16 @@ export async function crearYEnviar(formData: FormData) {
     .select('id').single()
   if (dbErr || !com) return { ok: false, error: 'Error al guardar el comunicado.' }
 
-  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined, departamento)
+  let adjuntos: Adjunto[] = []
+  if (files.length > 0) {
+    adjuntos = await subirAdjuntos(files, com.id)
+    if (adjuntos.length > 0) {
+      await adminDb().from('comunicados').update({ adjuntos }).eq('id', com.id)
+    }
+  }
+
+  const emailAttachments = adjuntos.length > 0 ? await descargarAdjuntos(adjuntos) : undefined
+  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined, departamento, emailAttachments)
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({
@@ -164,7 +230,7 @@ export async function crearYEnviar(formData: FormData) {
   return { ok: true, count: result.count }
 }
 
-// ── Solicitar aprobación (Secretaria) ────────────────────────────────────
+// ── Solicitar aprobación (Secretaria) ────────────────────────────────────────
 export async function solicitarAprobacion(formData: FormData) {
   const email = await getCurrentEmail()
   if (!email) return { ok: false, error: 'No autenticado.' }
@@ -176,16 +242,26 @@ export async function solicitarAprobacion(formData: FormData) {
   const cuerpo = String(formData.get('cuerpo') ?? '').trim().slice(0, 20000)
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
 
-  const { error } = await adminDb().from('comunicados').insert({
+  const filesRaw = formData.getAll('adjuntos') as unknown as File[]
+  const files = filesRaw.filter(f => f instanceof File && f.size > 0)
+
+  const { data: com, error } = await adminDb().from('comunicados').insert({
     asunto, cuerpo, creado_por: email, estado: 'pendiente_aprobacion',
-  })
-  if (error) return { ok: false, error: 'Error al guardar.' }
+  }).select('id').single()
+  if (error || !com) return { ok: false, error: 'Error al guardar.' }
+
+  if (files.length > 0) {
+    const adjuntos = await subirAdjuntos(files, com.id)
+    if (adjuntos.length > 0) {
+      await adminDb().from('comunicados').update({ adjuntos }).eq('id', com.id)
+    }
+  }
 
   revalidatePath('/admin/comunicados')
   return { ok: true }
 }
 
-// ── Aprobar y enviar (Presidenta o Super Admin) ───────────────────────────
+// ── Aprobar y enviar (Presidenta o Super Admin) ───────────────────────────────
 export async function aprobarYEnviar(id: string) {
   const email = await getCurrentEmail()
   if (!email) return { ok: false, error: 'No autenticado.' }
@@ -195,10 +271,13 @@ export async function aprobarYEnviar(id: string) {
     return { ok: false, error: 'No autorizado.' }
 
   const { data: com } = await adminDb()
-    .from('comunicados').select('asunto, cuerpo').eq('id', id).single()
+    .from('comunicados').select('asunto, cuerpo, adjuntos').eq('id', id).single()
   if (!com) return { ok: false, error: 'Comunicado no encontrado.' }
 
-  const result = await enviarEmails(com.asunto, com.cuerpo, 'todos')
+  const adjuntos = (com.adjuntos ?? []) as Adjunto[]
+  const emailAttachments = adjuntos.length > 0 ? await descargarAdjuntos(adjuntos) : undefined
+
+  const result = await enviarEmails(com.asunto, com.cuerpo, 'todos', undefined, undefined, emailAttachments)
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({
@@ -212,7 +291,7 @@ export async function aprobarYEnviar(id: string) {
   return { ok: true, count: result.count }
 }
 
-// ── Eliminar (Presidenta o Super Admin) ──────────────────────────────────
+// ── Eliminar (Presidenta o Super Admin) ───────────────────────────────────────
 export async function eliminarComunicado(id: string) {
   const email = await getCurrentEmail()
   if (!email) return { ok: false, error: 'No autenticado.' }
@@ -221,12 +300,15 @@ export async function eliminarComunicado(id: string) {
   if (role !== 'superadmin' && role !== 'presidenta')
     return { ok: false, error: 'No autorizado.' }
 
+  const { data: com } = await adminDb().from('comunicados').select('adjuntos').eq('id', id).maybeSingle()
+  if (com?.adjuntos?.length) await limpiarAdjuntos(com.adjuntos as Adjunto[])
+
   await adminDb().from('comunicados').delete().eq('id', id)
   revalidatePath('/admin/comunicados')
   return { ok: true }
 }
 
-// ── Rechazar (Presidenta o Super Admin) ──────────────────────────────────
+// ── Rechazar (Presidenta o Super Admin) ───────────────────────────────────────
 export async function rechazar(id: string) {
   const email = await getCurrentEmail()
   if (!email) return { ok: false, error: 'No autenticado.' }

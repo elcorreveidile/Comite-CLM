@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado } from './actions'
+import type { Adjunto } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
 type DestinatarioTipo = 'todos' | 'comite' | 'especifico' | 'departamento'
@@ -18,6 +19,7 @@ type Comunicado = {
   destinatarios_count: number | null
   enviado_at: string | null
   created_at: string
+  adjuntos: Adjunto[]
 }
 
 function Badge({ estado }: { estado: Comunicado['estado'] }) {
@@ -39,14 +41,15 @@ function Badge({ estado }: { estado: Comunicado['estado'] }) {
 }
 
 function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Role; enHistorial?: boolean }) {
-  const [loading, setLoading]     = useState(false)
-  const [deleting, setDeleting]   = useState(false)
+  const [loading, setLoading]       = useState(false)
+  const [deleting, setDeleting]     = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
-  const [msg, setMsg]             = useState('')
-  const [eliminado, setEliminado] = useState(false)
+  const [msg, setMsg]               = useState('')
+  const [eliminado, setEliminado]   = useState(false)
 
   const canApprove = (role === 'presidenta' || role === 'superadmin') && com.estado === 'pendiente_aprobacion'
   const canDelete  = (role === 'presidenta' || role === 'superadmin') && enHistorial
+  const adjuntos   = com.adjuntos ?? []
 
   async function handleAprobar() {
     setLoading(true)
@@ -92,6 +95,17 @@ function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Rol
         </div>
       </div>
       <p className="text-sm text-gray-500 whitespace-pre-wrap line-clamp-3 mb-3">{com.cuerpo}</p>
+
+      {adjuntos.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {adjuntos.map((a, i) => (
+            <span key={i} className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+              📎 {a.name}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-center justify-between text-xs text-gray-400">
         <span>
           {new Date(com.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -280,10 +294,75 @@ function BuscadorTrabajador({ trabajadores }: { trabajadores: Trabajador[] }) {
   )
 }
 
+function AdjuntosInput({
+  files,
+  onChange,
+}: {
+  files: File[]
+  onChange: (files: File[]) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files ?? [])
+    const existingNames = new Set(files.map(f => f.name))
+    onChange([...files, ...selected.filter(f => !existingNames.has(f.name))])
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  function remove(name: string) {
+    onChange(files.filter(f => f.name !== name))
+  }
+
+  const totalMB = (files.reduce((s, f) => s + f.size, 0) / (1024 * 1024)).toFixed(1)
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-600 mb-1">Adjuntos (opcional)</label>
+
+      {files.length > 0 && (
+        <div className="mb-2 space-y-1">
+          {files.map(f => (
+            <div key={f.name} className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded px-3 py-1.5">
+              <span className="text-xs text-gray-700 truncate mr-2">📎 {f.name}</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs text-gray-400">{(f.size / 1024).toFixed(0)} KB</span>
+                <button
+                  type="button"
+                  onClick={() => remove(f.name)}
+                  className="text-gray-300 hover:text-red-400 text-base leading-none"
+                >×</button>
+              </div>
+            </div>
+          ))}
+          <p className="text-xs text-gray-400">Total: {totalMB} MB · máx. 20 MB</p>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="text-xs text-gray-500 border border-dashed border-gray-300 rounded px-3 py-2 hover:border-gray-400 hover:text-gray-600 w-full transition-colors"
+      >
+        + Adjuntar archivo
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        onChange={handleFileChange}
+        className="hidden"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.txt,.csv,.zip"
+      />
+    </div>
+  )
+}
+
 function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores: Trabajador[] }) {
-  const [estado, setEstado]         = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
-  const [msg, setMsg]               = useState('')
-  const [tipo, setTipo]             = useState<DestinatarioTipo>('todos')
+  const [estado, setEstado] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
+  const [msg, setMsg]       = useState('')
+  const [tipo, setTipo]     = useState<DestinatarioTipo>('todos')
+  const [adjuntos, setAdjuntos] = useState<File[]>([])
 
   const canSendDirect = role === 'superadmin' || role === 'presidenta'
 
@@ -300,6 +379,9 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
       setEstado('error')
       return
     }
+    // Añadir archivos al FormData manualmente
+    adjuntos.forEach(f => data.append('adjuntos', f))
+
     setEstado('loading')
 
     const res = canSendDirect ? await crearYEnviar(data) : await solicitarAprobacion(data)
@@ -314,6 +396,7 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
       setEstado('ok')
       ;(e.target as HTMLFormElement).reset()
       setTipo('todos')
+      setAdjuntos([])
     } else {
       setMsg(`❌ ${res.error}`)
       setEstado('error')
@@ -336,7 +419,6 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Selector de destinatario — solo para roles con envío directo */}
           {canSendDirect && (
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-2">Destinatarios *</label>
@@ -391,6 +473,8 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-y"
             />
           </div>
+
+          <AdjuntosInput files={adjuntos} onChange={setAdjuntos} />
 
           {estado === 'error' && <p className="text-sm text-red-600">{msg}</p>}
 
