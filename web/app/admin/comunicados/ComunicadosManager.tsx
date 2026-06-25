@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado } from './actions'
+import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado, cancelarProgramado } from './actions'
 import type { Adjunto } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
@@ -13,11 +13,12 @@ type Comunicado = {
   id: string
   asunto: string
   cuerpo: string
-  estado: 'pendiente_aprobacion' | 'enviado' | 'rechazado'
+  estado: 'pendiente_aprobacion' | 'enviado' | 'rechazado' | 'programado'
   creado_por: string
   aprobado_por: string | null
   destinatarios_count: number | null
   enviado_at: string | null
+  programado_at: string | null
   created_at: string
   adjuntos: Adjunto[]
 }
@@ -25,13 +26,15 @@ type Comunicado = {
 function Badge({ estado }: { estado: Comunicado['estado'] }) {
   const styles = {
     pendiente_aprobacion: 'bg-amber-100 text-amber-800',
-    enviado: 'bg-green-100 text-green-800',
-    rechazado: 'bg-red-100 text-red-800',
+    enviado:              'bg-green-100 text-green-800',
+    rechazado:            'bg-red-100 text-red-800',
+    programado:           'bg-blue-100 text-blue-800',
   }
   const labels = {
     pendiente_aprobacion: 'Pendiente aprobación',
-    enviado: 'Enviado',
-    rechazado: 'Rechazado',
+    enviado:              'Enviado',
+    rechazado:            'Rechazado',
+    programado:           'Programado',
   }
   return (
     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles[estado]}`}>
@@ -40,15 +43,16 @@ function Badge({ estado }: { estado: Comunicado['estado'] }) {
   )
 }
 
-function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Role; enHistorial?: boolean }) {
+function ComunicadoCard({ com, role, enHistorial, esProgramado }: { com: Comunicado; role: Role; enHistorial?: boolean; esProgramado?: boolean }) {
   const [loading, setLoading]       = useState(false)
   const [deleting, setDeleting]     = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
   const [msg, setMsg]               = useState('')
   const [eliminado, setEliminado]   = useState(false)
+  const [expanded, setExpanded]     = useState(false)
 
   const canApprove = (role === 'presidenta' || role === 'superadmin') && com.estado === 'pendiente_aprobacion'
-  const canDelete  = (role === 'presidenta' || role === 'superadmin') && enHistorial
+  const canDelete  = (role === 'presidenta' || role === 'superadmin') && (enHistorial || esProgramado)
   const adjuntos   = com.adjuntos ?? []
 
   async function handleAprobar() {
@@ -67,7 +71,8 @@ function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Rol
 
   async function handleEliminar() {
     setDeleting(true)
-    const res = await eliminarComunicado(com.id)
+    const action = esProgramado ? cancelarProgramado : eliminarComunicado
+    const res = await action(com.id)
     if (res.ok) {
       setEliminado(true)
     } else {
@@ -89,12 +94,33 @@ function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Rol
             <button
               onClick={() => setConfirmDel(true)}
               className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none"
-              title="Eliminar"
+              title={esProgramado ? 'Cancelar envío' : 'Eliminar'}
             >×</button>
           )}
         </div>
       </div>
-      <p className="text-sm text-gray-500 whitespace-pre-wrap line-clamp-3 mb-3">{com.cuerpo}</p>
+
+      {com.programado_at && (
+        <p className="text-xs text-blue-600 mb-2">
+          🕒 Programado para el{' '}
+          {new Date(com.programado_at).toLocaleString('es-ES', {
+            day: 'numeric', month: 'long', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })}
+        </p>
+      )}
+
+      <div className="mb-3">
+        <p className={`text-sm text-gray-500 whitespace-pre-wrap ${expanded ? '' : 'line-clamp-3'}`}>
+          {com.cuerpo}
+        </p>
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="text-xs text-blue-700 hover:underline mt-1"
+        >
+          {expanded ? 'Ocultar' : 'Ver completo'}
+        </button>
+      </div>
 
       {adjuntos.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
@@ -120,19 +146,21 @@ function ComunicadoCard({ com, role, enHistorial }: { com: Comunicado; role: Rol
 
       {confirmDel && (
         <div className="mt-4 flex items-center gap-3 bg-red-50 rounded-lg px-3 py-2">
-          <p className="text-xs text-red-700 flex-1">¿Eliminar este comunicado del historial?</p>
+          <p className="text-xs text-red-700 flex-1">
+            {esProgramado ? '¿Cancelar este envío programado?' : '¿Eliminar este comunicado del historial?'}
+          </p>
           <button
             onClick={handleEliminar}
             disabled={deleting}
             className="text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg disabled:opacity-50"
           >
-            {deleting ? 'Eliminando…' : 'Sí, eliminar'}
+            {deleting ? 'Cancelando…' : esProgramado ? 'Sí, cancelar' : 'Sí, eliminar'}
           </button>
           <button
             onClick={() => setConfirmDel(false)}
             className="text-xs text-gray-500 hover:text-gray-700"
           >
-            Cancelar
+            Volver
           </button>
         </div>
       )}
@@ -358,11 +386,17 @@ function AdjuntosInput({
   )
 }
 
+function getMinDatetime() {
+  const d = new Date(Date.now() + 5 * 60 * 1000)
+  return d.toISOString().slice(0, 16)
+}
+
 function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores: Trabajador[] }) {
-  const [estado, setEstado] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
-  const [msg, setMsg]       = useState('')
-  const [tipo, setTipo]     = useState<DestinatarioTipo>('todos')
-  const [adjuntos, setAdjuntos] = useState<File[]>([])
+  const [estado, setEstado]       = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
+  const [msg, setMsg]             = useState('')
+  const [tipo, setTipo]           = useState<DestinatarioTipo>('todos')
+  const [adjuntos, setAdjuntos]   = useState<File[]>([])
+  const [programadoAt, setProgramadoAt] = useState('')
 
   const canSendDirect = role === 'superadmin' || role === 'presidenta'
 
@@ -379,7 +413,6 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
       setEstado('error')
       return
     }
-    // Añadir archivos al FormData manualmente
     adjuntos.forEach(f => data.append('adjuntos', f))
 
     setEstado('loading')
@@ -387,18 +420,24 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
     const res = canSendDirect ? await crearYEnviar(data) : await solicitarAprobacion(data)
 
     if (res.ok) {
-      const count = (res as any).count
-      setMsg(canSendDirect
-        ? count === 1
-          ? '✅ Enviado correctamente a 1 destinatario'
-          : `✅ Enviado correctamente a ${count} destinatarios`
-        : '✅ Solicitud enviada. La Presidenta recibirá el comunicado para aprobación.')
+      if ((res as any).programado) {
+        const dt = new Date((res as any).programadoAt)
+        setMsg(`✅ Programado para el ${dt.toLocaleString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`)
+      } else {
+        const count = (res as any).count
+        setMsg(canSendDirect
+          ? count === 1
+            ? '✅ Enviado correctamente a 1 destinatario'
+            : `✅ Enviado correctamente a ${count} destinatarios`
+          : '✅ Solicitud enviada. La Presidenta recibirá el comunicado para aprobación.')
+      }
       setEstado('ok')
       ;(e.target as HTMLFormElement).reset()
       setTipo('todos')
       setAdjuntos([])
+      setProgramadoAt('')
     } else {
-      setMsg(`❌ ${res.error}`)
+      setMsg(`❌ ${'error' in res ? res.error : 'Error inesperado.'}`)
       setEstado('error')
     }
   }
@@ -476,6 +515,31 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
 
           <AdjuntosInput files={adjuntos} onChange={setAdjuntos} />
 
+          {canSendDirect && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Envío programado <span className="text-gray-400 font-normal">(opcional — déjalo vacío para enviar ahora)</span>
+              </label>
+              <input
+                type="datetime-local"
+                name="programado_at"
+                value={programadoAt}
+                onChange={e => setProgramadoAt(e.target.value)}
+                min={getMinDatetime()}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+              />
+              {programadoAt && (
+                <button
+                  type="button"
+                  onClick={() => setProgramadoAt('')}
+                  className="text-xs text-gray-400 hover:text-gray-600 mt-1"
+                >
+                  Enviar inmediatamente
+                </button>
+              )}
+            </div>
+          )}
+
           {estado === 'error' && <p className="text-sm text-red-600">{msg}</p>}
 
           <button
@@ -487,10 +551,12 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
             {estado === 'loading'
               ? 'Procesando…'
               : canSendDirect
-                ? tipo === 'todos'        ? '📨 Enviar a todos los trabajadores'
-                : tipo === 'comite'       ? '📨 Enviar a los miembros del comité'
-                : tipo === 'departamento' ? '📨 Enviar al departamento seleccionado'
-                :                          '📨 Enviar a los trabajadores seleccionados'
+                ? programadoAt
+                  ? '🕒 Programar envío'
+                  : tipo === 'todos'        ? '📨 Enviar a todos los trabajadores'
+                  : tipo === 'comite'       ? '📨 Enviar a los miembros del comité'
+                  : tipo === 'departamento' ? '📨 Enviar al departamento seleccionado'
+                  :                          '📨 Enviar a los trabajadores seleccionados'
                 : '📤 Solicitar aprobación a la Presidenta'}
           </button>
 
@@ -508,11 +574,13 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
 export default function ComunicadosManager({
   role,
   pendientes,
+  programados,
   historial,
   trabajadores,
 }: {
   role: Role
   pendientes: Comunicado[]
+  programados: Comunicado[]
   historial: Comunicado[]
   trabajadores: Trabajador[]
 }) {
@@ -536,6 +604,20 @@ export default function ComunicadosManager({
         </div>
       )}
 
+      {canApprove && programados.length > 0 && (
+        <div className="mb-8">
+          <h2 className="font-bold text-blue-700 mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 bg-blue-500 rounded-full" />
+            Envíos programados ({programados.length})
+          </h2>
+          <div className="space-y-4">
+            {programados.map(com => (
+              <ComunicadoCard key={com.id} com={com} role={role} esProgramado />
+            ))}
+          </div>
+        </div>
+      )}
+
       {historial.length > 0 && (
         <div>
           <h2 className="font-bold text-gray-700 mb-3">Historial</h2>
@@ -547,7 +629,7 @@ export default function ComunicadosManager({
         </div>
       )}
 
-      {pendientes.length === 0 && historial.length === 0 && (
+      {pendientes.length === 0 && programados.length === 0 && historial.length === 0 && (
         <p className="text-center text-gray-400 text-sm py-8">No hay comunicados todavía.</p>
       )}
     </div>
