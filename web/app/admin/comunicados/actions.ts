@@ -3,13 +3,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { SUPER_ADMINS } from '@/lib/admins'
-import { escapeHtml } from '@/lib/html'
 import { revalidatePath } from 'next/cache'
+import { buildHtmlBody, sendBrevoBulk, type EmailAttachment } from '@/lib/brevo'
 
 const BUCKET = 'comunicados-adjuntos'
-const BREVO_API = 'https://api.brevo.com/v3/smtp/email'
-const FROM_NAME = 'Comité CLM · UGT'
-const FROM_EMAIL = 'no-reply@comiteclm.com'
 
 function adminDb() {
   return createAdminClient(
@@ -37,7 +34,7 @@ export async function getRole(email: string): Promise<'superadmin' | 'presidenta
   return null
 }
 
-type DestinatarioTipo = 'todos' | 'comite' | 'especifico' | 'departamento'
+export type DestinatarioTipo = 'todos' | 'comite' | 'especifico' | 'departamento'
 export type Adjunto = { name: string; path: string; size: number }
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
@@ -46,11 +43,9 @@ async function ensureBucket() {
   try {
     await adminDb().storage.createBucket(BUCKET, {
       public: false,
-      fileSizeLimit: 10 * 1024 * 1024, // 10 MB por archivo
+      fileSizeLimit: 10 * 1024 * 1024,
     })
-  } catch {
-    // Ya existe, ignorar
-  }
+  } catch {}
 }
 
 async function subirAdjuntos(files: File[], comunicadoId: string): Promise<Adjunto[]> {
@@ -69,10 +64,10 @@ async function subirAdjuntos(files: File[], comunicadoId: string): Promise<Adjun
   return adjuntos
 }
 
-async function descargarAdjuntos(adjuntos: Adjunto[]): Promise<Array<{ filename: string; content: Buffer }>> {
+async function descargarAdjuntos(adjuntos: Adjunto[]): Promise<EmailAttachment[]> {
   if (!adjuntos.length) return []
   const db = adminDb()
-  const result = []
+  const result: EmailAttachment[] = []
   for (const adj of adjuntos) {
     const { data, error } = await db.storage.from(BUCKET).download(adj.path)
     if (!error && data) {
@@ -100,14 +95,12 @@ async function resolverEmails(
     if (!emails.length) return { emails: [], error: 'No hay trabajadores activos registrados.' }
     return { emails }
   }
-
   if (tipo === 'comite') {
     const { data } = await adminDb().from('miembros_comite').select('email').eq('activo', true)
     const emails = (data ?? []).map((m: any) => m.email).filter(Boolean) as string[]
     if (!emails.length) return { emails: [], error: 'No hay miembros del comité activos registrados.' }
     return { emails }
   }
-
   if (tipo === 'departamento') {
     if (!departamento) return { emails: [], error: 'Debes seleccionar un departamento.' }
     const { data } = await adminDb().from('trabajadores').select('email').eq('departamento', departamento).eq('baja_comunicados', false)
@@ -115,12 +108,10 @@ async function resolverEmails(
     if (!emails.length) return { emails: [], error: `No hay trabajadores en el departamento "${departamento}".` }
     return { emails }
   }
-
   if (tipo === 'especifico') {
     if (!emailsEspecificos?.length) return { emails: [], error: 'Debes seleccionar al menos un destinatario.' }
     return { emails: emailsEspecificos }
   }
-
   return { emails: [], error: 'Tipo de destinatario no válido.' }
 }
 
@@ -130,83 +121,11 @@ async function enviarEmails(
   tipo: DestinatarioTipo,
   emailsEspecificos?: string[],
   departamento?: string,
-  attachments?: Array<{ filename: string; content: Buffer }>,
+  attachments?: EmailAttachment[],
 ): Promise<{ ok: boolean; count?: number; error?: string }> {
   const { emails, error } = await resolverEmails(tipo, emailsEspecificos, departamento)
   if (error || !emails.length) return { ok: false, error: error ?? 'Sin destinatarios.' }
-
-  const htmlBody = `
-    <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-      <div style="background:#003087;color:white;padding:16px 24px;border-radius:8px 8px 0 0">
-        <strong>Comité CLM · Sección Sindical UGT · Universidad de Granada</strong>
-      </div>
-      <div style="padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;line-height:1.7">
-        <div style="white-space:pre-wrap">${escapeHtml(cuerpo)}</div>
-      </div>
-      <p style="color:#9ca3af;font-size:12px;margin-top:16px;text-align:center">
-        Sección Sindical UGT · Centro de Lenguas Modernas · Universidad de Granada
-      </p>
-      <p style="color:#d1d5db;font-size:11px;margin-top:4px;text-align:center">
-        ¿No deseas recibir estos comunicados? <a href="https://comiteclm.com/panel/perfil" style="color:#d1d5db">Accede a tu perfil</a> para darte de baja.
-      </p>
-    </div>`
-
-  const apiKey = process.env.BREVO_API_KEY
-  if (!apiKey) return { ok: false, error: 'BREVO_API_KEY no configurada.' }
-
-  const brevoAttachments = attachments?.length
-    ? attachments.map(a => ({ name: a.filename, content: a.content.toString('base64') }))
-    : undefined
-
-  const sender = { name: FROM_NAME, email: FROM_EMAIL }
-
-  const sendBrevo = async (body: object) => {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 20000)
-    try {
-      const res = await fetch(BREVO_API, {
-        method: 'POST',
-        headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      })
-      clearTimeout(timer)
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        return { error: err.message ?? res.statusText }
-      }
-      return {}
-    } catch (e: any) {
-      clearTimeout(timer)
-      return { error: e.name === 'AbortError' ? 'Timeout al contactar con Brevo.' : e.message }
-    }
-  }
-
-  if (emails.length === 1) {
-    const body: Record<string, unknown> = { sender, to: [{ email: emails[0] }], subject: asunto, htmlContent: htmlBody }
-    if (brevoAttachments) body.attachment = brevoAttachments
-    const { error: err } = await sendBrevo(body)
-    if (err) return { ok: false, error: `Error Brevo: ${err}` }
-    return { ok: true, count: 1 }
-  }
-
-  // Brevo allows up to 99 BCC recipients per call
-  const CHUNK = 98
-  for (let i = 0; i < emails.length; i += CHUNK) {
-    const chunk = emails.slice(i, i + CHUNK)
-    const body: Record<string, unknown> = {
-      sender,
-      to: [{ email: FROM_EMAIL }],
-      bcc: chunk.map(email => ({ email })),
-      subject: asunto,
-      htmlContent: htmlBody,
-    }
-    if (brevoAttachments) body.attachment = brevoAttachments
-    const { error: err } = await sendBrevo(body)
-    if (err) return { ok: false, error: `Error Brevo (lote ${Math.floor(i / CHUNK) + 1}): ${err}` }
-  }
-
-  return { ok: true, count: emails.length }
+  return sendBrevoBulk(emails, asunto, buildHtmlBody(cuerpo), attachments)
 }
 
 // ── Envío directo (Presidenta o Super Admin) ──────────────────────────────────
@@ -223,15 +142,31 @@ export async function crearYEnviar(formData: FormData) {
   const tipo              = String(formData.get('destinatario_tipo') ?? 'todos') as DestinatarioTipo
   const emailsEspecificos = formData.getAll('destinatario_email').map(v => String(v).trim()).filter(Boolean)
   const departamento      = String(formData.get('destinatario_departamento') ?? '').trim() || undefined
+  const programadoAtStr   = String(formData.get('programado_at') ?? '').trim()
 
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
+
+  let programadoAt: Date | null = null
+  if (programadoAtStr) {
+    const d = new Date(programadoAtStr)
+    if (!isNaN(d.getTime()) && d > new Date()) programadoAt = d
+  }
 
   const filesRaw = formData.getAll('adjuntos') as unknown as File[]
   const files = filesRaw.filter(f => f instanceof File && f.size > 0)
 
   const { data: com, error: dbErr } = await adminDb()
     .from('comunicados')
-    .insert({ asunto, cuerpo, creado_por: email, estado: 'pendiente_aprobacion' })
+    .insert({
+      asunto,
+      cuerpo,
+      creado_por: email,
+      estado: programadoAt ? 'programado' : 'pendiente_aprobacion',
+      destinatario_tipo: tipo,
+      destinatario_emails: emailsEspecificos.length ? emailsEspecificos : null,
+      destinatario_departamento: departamento ?? null,
+      programado_at: programadoAt?.toISOString() ?? null,
+    })
     .select('id').single()
   if (dbErr || !com) return { ok: false, error: 'Error al guardar el comunicado.' }
 
@@ -241,6 +176,11 @@ export async function crearYEnviar(formData: FormData) {
     if (adjuntos.length > 0) {
       await adminDb().from('comunicados').update({ adjuntos }).eq('id', com.id)
     }
+  }
+
+  if (programadoAt) {
+    revalidatePath('/admin/comunicados')
+    return { ok: true, programado: true, programadoAt: programadoAt.toISOString() }
   }
 
   const emailAttachments = adjuntos.length > 0 ? await descargarAdjuntos(adjuntos) : undefined
@@ -319,7 +259,24 @@ export async function aprobarYEnviar(id: string) {
   return { ok: true, count: result.count }
 }
 
-// ── Eliminar (Presidenta o Super Admin) ───────────────────────────────────────
+// ── Cancelar programado (Presidenta o Super Admin) ────────────────────────────
+export async function cancelarProgramado(id: string) {
+  const email = await getCurrentEmail()
+  if (!email) return { ok: false, error: 'No autenticado.' }
+
+  const role = await getRole(email)
+  if (role !== 'superadmin' && role !== 'presidenta')
+    return { ok: false, error: 'No autorizado.' }
+
+  const { data: com } = await adminDb().from('comunicados').select('adjuntos').eq('id', id).maybeSingle()
+  if (com?.adjuntos?.length) await limpiarAdjuntos(com.adjuntos as Adjunto[])
+
+  await adminDb().from('comunicados').delete().eq('id', id)
+  revalidatePath('/admin/comunicados')
+  return { ok: true }
+}
+
+// ── Eliminar historial (Presidenta o Super Admin) ─────────────────────────────
 export async function eliminarComunicado(id: string) {
   const email = await getCurrentEmail()
   if (!email) return { ok: false, error: 'No autenticado.' }

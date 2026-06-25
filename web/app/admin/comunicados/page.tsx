@@ -26,7 +26,8 @@ export default async function ComunicadosPage() {
   ])
 
   const pendientes  = (todos ?? []).filter((c: any) => c.estado === 'pendiente_aprobacion')
-  const historial   = (todos ?? []).filter((c: any) => c.estado !== 'pendiente_aprobacion')
+  const programados = (todos ?? []).filter((c: any) => c.estado === 'programado')
+  const historial   = (todos ?? []).filter((c: any) => c.estado === 'enviado' || c.estado === 'rechazado')
   const trabajadores = (trabajadoresRaw ?? []).filter((t: any) => !SUPER_ADMINS.includes(t.email))
 
   return (
@@ -42,6 +43,7 @@ export default async function ComunicadosPage() {
       <ComunicadosManager
         role={role}
         pendientes={pendientes}
+        programados={programados}
         historial={historial}
         trabajadores={trabajadores ?? []}
       />

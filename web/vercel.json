@@ -1,5 +1,11 @@
 {
   "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/enviar-programados",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "redirects": [
     { "source": "/wp-admin",          "destination": "/intento", "permanent": false },
     { "source": "/wp-admin/(.*)",      "destination": "/intento", "permanent": false },
