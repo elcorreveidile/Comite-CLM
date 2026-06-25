@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ContactForm from '@/app/components/ContactForm'
 import CookieBanner from '@/app/components/CookieBanner'
+import FooterEasterEgg from '@/app/components/FooterEasterEgg'
 
 const UGT_MEMBERS: { nombre: string; cargo?: string }[] = [
   { nombre: 'Benjamín Prieto' },
@@ -177,6 +178,7 @@ export default function Home() {
 
     </div>
     <CookieBanner />
+    <FooterEasterEgg />
     </>
   )
 }
