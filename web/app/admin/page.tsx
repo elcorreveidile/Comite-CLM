@@ -47,7 +47,7 @@ export default async function AdminPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Panel de administración</h1>
-      <p className="text-gray-500 text-sm mb-8">Comité de Empresa · Centro de Lenguas Modernas · UGR</p>
+      <p className="text-gray-500 text-sm mb-8">Comité CLM · Sección Sindical UGT · Universidad de Granada</p>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {cards.map(card => (

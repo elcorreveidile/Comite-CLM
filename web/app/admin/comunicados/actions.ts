@@ -137,13 +137,13 @@ async function enviarEmails(
   const htmlBody = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
       <div style="background:#003087;color:white;padding:16px 24px;border-radius:8px 8px 0 0">
-        <strong>Comité de Empresa · CLM · Universidad de Granada</strong>
+        <strong>Comité CLM · Sección Sindical UGT · Universidad de Granada</strong>
       </div>
       <div style="padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;line-height:1.7">
         <div style="white-space:pre-wrap">${escapeHtml(cuerpo)}</div>
       </div>
       <p style="color:#9ca3af;font-size:12px;margin-top:16px;text-align:center">
-        Centro de Lenguas Modernas · Universidad de Granada
+        Sección Sindical UGT · Centro de Lenguas Modernas · Universidad de Granada
       </p>
       <p style="color:#d1d5db;font-size:11px;margin-top:4px;text-align:center">
         ¿No deseas recibir estos comunicados? <a href="https://comiteclm.com/panel/perfil" style="color:#d1d5db">Accede a tu perfil</a> para darte de baja.

@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Comité de Empresa | Centro de Lenguas Modernas · UGR',
-  description: 'Sitio web del Comité de Empresa del Centro de Lenguas Modernas de la Universidad de Granada.',
+  title: 'Comité CLM · Sección Sindical UGT',
+  description: 'Plataforma de comunicación de la Sección Sindical de UGT del Centro de Lenguas Modernas de la Universidad de Granada.',
   themeColor: '#003087',
   icons: {
     icon: '/icon.svg',

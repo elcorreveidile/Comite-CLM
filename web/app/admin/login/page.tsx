@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
             <span style={{ color: '#C8102E' }}>Admin</span>
           </a>
           <p className="text-zinc-400 text-sm">Panel de administración</p>
-          <p className="text-zinc-500 text-xs mt-1">Comité de Empresa · Centro de Lenguas Modernas</p>
+          <p className="text-zinc-500 text-xs mt-1">Comité CLM · Sección Sindical UGT</p>
         </div>
 
         {sent ? (

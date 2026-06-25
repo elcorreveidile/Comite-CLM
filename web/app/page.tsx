@@ -3,14 +3,6 @@ import Image from 'next/image'
 import ContactForm from '@/app/components/ContactForm'
 import CookieBanner from '@/app/components/CookieBanner'
 
-const CCOO_MEMBERS: { nombre: string; cargo?: string }[] = [
-  { nombre: 'M.ª Ángeles Lamolda González', cargo: 'Presidenta' },
-  { nombre: 'Isabel Álvarez', cargo: 'Secretaria' },
-  { nombre: 'Fiona Baird' },
-  { nombre: 'Ramón Barquero' },
-  { nombre: 'África Morales' },
-  { nombre: 'Giorgia Pordenoni' },
-]
 const UGT_MEMBERS: { nombre: string; cargo?: string }[] = [
   { nombre: 'Benjamín Prieto' },
   { nombre: 'Agustina García García' },
@@ -28,7 +20,7 @@ export default function Home() {
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-widest opacity-60 hidden sm:block">Universidad de Granada</p>
             <h1 className="text-base sm:text-lg font-semibold leading-tight">
-              Comité de Empresa
+              Comité CLM · Sección Sindical UGT
               <span className="block text-xs sm:text-sm font-normal opacity-75">Centro de Lenguas Modernas</span>
             </h1>
           </div>
@@ -55,16 +47,14 @@ export default function Home() {
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,48,135,0.88) 0%, rgba(0,48,135,0.78) 60%, rgba(0,48,135,0.88) 100%)' }} />
           </div>
           <div className="relative max-w-3xl mx-auto text-center">
-            {/* Logos de sindicatos */}
-            <div className="flex items-center justify-center gap-5 mb-8">
-              <Image src="/logo-ccoo.jpg" alt="CCOO" width={120} height={40} style={{ height: '2.25rem', width: 'auto' }} className="object-contain drop-shadow-md" />
-              <span className="text-white/30 text-2xl font-thin">·</span>
-              <Image src="/logo-ugt.webp" alt="UGT" width={80} height={48} style={{ height: '2.75rem', width: 'auto' }} className="object-contain drop-shadow-md" />
+            <div className="flex items-center justify-center mb-8">
+              <Image src="/logo-ugt.webp" alt="UGT" width={100} height={60} style={{ height: '3.25rem', width: 'auto' }} className="object-contain drop-shadow-md" />
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Tu comité de empresa</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Tu canal directo con el comité</h2>
             <p className="text-base sm:text-lg opacity-80 mb-8 leading-relaxed">
-              Representamos a los trabajadores del Centro de Lenguas Modernas de la Universidad de Granada.
-              Aquí encontrarás información sobre tus derechos, el convenio colectivo y las actividades del comité.
+              La Sección Sindical de UGT del Centro de Lenguas Modernas pone a tu disposición
+              esta herramienta de comunicación directa. Todo lo que nos hagas llegar será trasladado
+              al conjunto del Comité de Empresa.
             </p>
             <Link
               href="/panel/login"
@@ -93,41 +83,26 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Composición del comité ── */}
-        <section className="py-16 px-6">
+        {/* ── Sobre esta plataforma ── */}
+        <section className="py-14 px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Una herramienta para toda la plantilla</h2>
+            <p className="text-gray-500 leading-relaxed">
+              Esta plataforma ha sido desarrollada por la Sección Sindical de UGT del CLM como
+              instrumento legalmente establecido de comunicación con los trabajadores y trabajadoras.
+              Está diseñada para servir al conjunto de la plantilla, tanto en el actual mandato
+              como en los futuros comités de empresa.
+            </p>
+          </div>
+        </section>
+
+        {/* ── Nuestros representantes ── */}
+        <section className="py-12 px-6 bg-gray-50">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Composición del comité</h2>
-            <p className="text-center text-gray-400 text-sm mb-10">9 representantes elegidos · mandato vigente</p>
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Nuestros representantes</h2>
+            <p className="text-center text-gray-400 text-sm mb-10">Sección Sindical UGT · 3 representantes en el Comité de Empresa</p>
 
-            <div className="grid sm:grid-cols-2 gap-6">
-
-              {/* CCOO */}
-              <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 flex items-center justify-between" style={{ backgroundColor: '#fef2f2' }}>
-                  <Image src="/logo-ccoo.jpg" alt="CCOO" width={120} height={40} style={{ height: '2rem', width: 'auto' }} className="object-contain" />
-                  <div className="text-right">
-                    <span className="text-4xl font-bold" style={{ color: '#E2001A' }}>6</span>
-                    <p className="text-xs text-gray-400 leading-none">representantes</p>
-                  </div>
-                </div>
-                <div className="px-6 py-4 bg-white divide-y divide-gray-50">
-                  {CCOO_MEMBERS.map(m => (
-                    <div key={m.nombre} className="flex items-center justify-between py-2">
-                      <div className="flex items-center gap-3">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#E2001A' }} />
-                        <span className="text-sm text-gray-700">{m.nombre}</span>
-                      </div>
-                      {m.cargo && (
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full ml-2 shrink-0" style={{ backgroundColor: '#003087', color: 'white' }}>
-                          {m.cargo}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* UGT */}
+            <div className="max-w-sm mx-auto">
               <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-5 flex items-center justify-between" style={{ backgroundColor: '#fef2f2' }}>
                   <Image src="/logo-ugt.webp" alt="UGT" width={80} height={48} style={{ height: '2.5rem', width: 'auto' }} className="object-contain" />
@@ -152,13 +127,12 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-
             </div>
           </div>
         </section>
 
         {/* ── Contacto ── */}
-        <section className="py-14 px-6 bg-gray-50 border-t border-gray-100">
+        <section className="py-14 px-6 bg-white border-t border-gray-100">
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
               <h3 className="text-xl font-bold mb-2 text-gray-800">¿Necesitas contactar con el comité?</h3>
@@ -177,7 +151,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
             <p className="text-xs text-gray-400">
-              Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada
+              Sección Sindical UGT · Centro de Lenguas Modernas · Universidad de Granada
             </p>
             <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-2">
               <Link href="/aviso-legal"  className="text-xs text-gray-300 hover:text-gray-500 transition-colors">Aviso legal</Link>
@@ -193,8 +167,7 @@ export default function Home() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <Image src="/logo-ccoo.jpg" alt="CCOO" width={60} height={20} style={{ height: '1.1rem', width: 'auto' }} className="object-contain opacity-50 hover:opacity-100 transition-opacity" />
-            <Image src="/logo-ugt.webp" alt="UGT" width={40} height={24} style={{ height: '1.3rem', width: 'auto' }} className="object-contain opacity-50 hover:opacity-100 transition-opacity" />
+            <Image src="/logo-ugt.webp" alt="UGT" width={50} height={30} style={{ height: '1.5rem', width: 'auto' }} className="object-contain opacity-50 hover:opacity-100 transition-opacity" />
             <Link href="/admin/login" className="text-xs text-gray-300 hover:text-gray-500 transition-colors ml-2">
               Área del comité
             </Link>
