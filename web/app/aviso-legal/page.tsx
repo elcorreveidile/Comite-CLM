@@ -13,18 +13,17 @@ export default function AvisoLegalPage() {
       <main className="max-w-3xl mx-auto px-4 py-10 prose prose-gray prose-sm sm:prose-base">
         <h2>1. Identificación del titular</h2>
         <p>
-          El presente sitio web (<strong>comiteclm.com</strong>) es titularidad del <strong>Comité de Empresa del Centro de Lenguas Modernas de la Universidad de Granada</strong>, órgano de representación de los trabajadores constituido al amparo del Estatuto de los Trabajadores.
+          El presente sitio web (<strong>comiteclm.com</strong>) es titularidad de la <strong>Sección Sindical de UGT del Centro de Lenguas Modernas de la Universidad de Granada</strong>, en el ejercicio de sus funciones legalmente reconocidas de comunicación con los trabajadores al amparo del Estatuto de los Trabajadores y de la Ley Orgánica de Libertad Sindical.
         </p>
         <ul>
-          <li><strong>Denominación:</strong> Comité de Empresa del CLM – Universidad de Granada</li>
+          <li><strong>Denominación:</strong> Sección Sindical de UGT – CLM, Universidad de Granada</li>
           <li><strong>Dirección:</strong> Placeta del Hospicio Viejo, s/n — 18010 Granada</li>
-          <li><strong>Correo de contacto (CCOO):</strong> ccoo@fyg.ugr.es</li>
-          <li><strong>Correo de contacto (UGT):</strong> ugt@fyg.ugr.es</li>
+          <li><strong>Correo de contacto:</strong> ugt@fyg.ugr.es</li>
         </ul>
 
         <h2>2. Objeto</h2>
         <p>
-          Este sitio web tiene como finalidad facilitar la comunicación entre el Comité de Empresa y los trabajadores del Centro de Lenguas Modernas de la Universidad de Granada, ofreciendo información sobre avisos, votaciones, documentos y propuestas sindicales.
+          Este sitio web tiene como finalidad facilitar la comunicación entre la Sección Sindical de UGT y los trabajadores del Centro de Lenguas Modernas de la Universidad de Granada, ofreciendo información sobre avisos, votaciones, documentos y propuestas sindicales.
         </p>
 
         <h2>3. Condiciones de uso</h2>
@@ -34,12 +33,12 @@ export default function AvisoLegalPage() {
 
         <h2>4. Propiedad intelectual</h2>
         <p>
-          Los contenidos del sitio web (textos, imágenes, logotipos) son propiedad del Comité de Empresa o de sus titulares correspondientes (CCOO, UGT, Universidad de Granada). Queda prohibida su reproducción sin autorización expresa, salvo para uso personal y no comercial.
+          Los contenidos del sitio web (textos, imágenes, logotipos) son propiedad de la Sección Sindical de UGT del CLM o de sus titulares correspondientes (UGT, Universidad de Granada). Queda prohibida su reproducción sin autorización expresa, salvo para uso personal y no comercial.
         </p>
 
         <h2>5. Limitación de responsabilidad</h2>
         <p>
-          El Comité de Empresa no se responsabiliza de los daños derivados del uso del sitio ni de la información contenida en él, ni de los fallos técnicos que pudieran producirse en su acceso.
+          La Sección Sindical de UGT no se responsabiliza de los daños derivados del uso del sitio ni de la información contenida en él, ni de los fallos técnicos que pudieran producirse en su acceso.
         </p>
 
         <h2>6. Legislación aplicable</h2>

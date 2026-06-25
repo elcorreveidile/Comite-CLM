@@ -114,7 +114,7 @@ export default function ContactForm() {
       </button>
 
       <p className="text-xs text-gray-400 leading-relaxed">
-        Sus datos serán tratados por el Comité de Empresa del CLM para gestionar su consulta. Consulte nuestra{' '}
+        Sus datos serán tratados por la Sección Sindical de UGT del CLM para gestionar su consulta. Consulte nuestra{' '}
         <a href="/privacidad" className="underline hover:text-gray-600">política de privacidad</a>.
       </p>
     </form>

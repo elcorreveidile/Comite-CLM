@@ -13,10 +13,9 @@ export default function PrivacidadPage() {
       <main className="max-w-3xl mx-auto px-4 py-10 prose prose-gray prose-sm sm:prose-base">
         <h2>1. Responsable del tratamiento</h2>
         <ul>
-          <li><strong>Responsable:</strong> Comité de Empresa del Centro de Lenguas Modernas – Universidad de Granada</li>
+          <li><strong>Responsable:</strong> Sección Sindical de UGT del Centro de Lenguas Modernas – Universidad de Granada</li>
           <li><strong>Dirección:</strong> Placeta del Hospicio Viejo, s/n — 18010 Granada</li>
-          <li><strong>Contacto CCOO:</strong> ccoo@fyg.ugr.es</li>
-          <li><strong>Contacto UGT:</strong> ugt@fyg.ugr.es</li>
+          <li><strong>Contacto:</strong> ugt@fyg.ugr.es</li>
         </ul>
 
         <h2>2. Datos que recabamos y finalidades</h2>
@@ -50,7 +49,7 @@ export default function PrivacidadPage() {
         </ul>
 
         <h2>4. Derechos de los interesados</h2>
-        <p>Puede ejercer los siguientes derechos escribiendo a <strong>ccoo@fyg.ugr.es</strong> o <strong>ugt@fyg.ugr.es</strong> con copia de su DNI o documento identificativo equivalente:</p>
+        <p>Puede ejercer los siguientes derechos escribiendo a <strong>ugt@fyg.ugr.es</strong> con copia de su DNI o documento identificativo equivalente:</p>
         <ul>
           <li><strong>Acceso:</strong> conocer qué datos tratamos sobre usted.</li>
           <li><strong>Rectificación:</strong> corregir datos inexactos o incompletos.</li>

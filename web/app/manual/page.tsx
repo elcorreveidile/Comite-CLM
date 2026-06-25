@@ -1,6 +1,6 @@
 import PrintButton from './PrintButton'
 
-export const metadata = { title: 'Manual de Uso · Comité de Empresa CLM', robots: 'noindex' }
+export const metadata = { title: 'Manual de Uso · Sección Sindical UGT · CLM', robots: 'noindex' }
 
 const BLUE = '#003087'
 const RED  = '#E2001A'
@@ -18,7 +18,7 @@ function Portada() {
         <p className="text-sm uppercase tracking-widest text-gray-400">Universidad de Granada</p>
       </div>
       <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight mb-4">Manual de Uso</h1>
-      <h2 className="text-xl sm:text-2xl font-semibold mb-2" style={{ color: BLUE }}>Portal del Comité de Empresa</h2>
+      <h2 className="text-xl sm:text-2xl font-semibold mb-2" style={{ color: BLUE }}>Portal · Sección Sindical UGT</h2>
       <p className="text-gray-500 text-lg mb-12">Centro de Lenguas Modernas · Universidad de Granada</p>
       <div className="flex flex-col sm:flex-row gap-6 text-sm text-gray-500 border-t border-gray-200 pt-8 w-full max-w-lg justify-center">
         <span>Versión junio 2026</span>
@@ -185,7 +185,7 @@ export default function ManualPage() {
 
         <H3 id="p1-intro">1. Introducción</H3>
         <p className="text-gray-600 text-sm leading-relaxed mb-4">
-          El portal del Comité de Empresa del Centro de Lenguas Modernas de la Universidad de Granada
+          El portal de la Sección Sindical de UGT del Centro de Lenguas Modernas de la Universidad de Granada
           es una plataforma privada donde los trabajadores del CLM pueden mantenerse informados,
           participar en votaciones, consultar documentos y comunicarse con el comité de forma directa
           y segura.
@@ -546,7 +546,6 @@ export default function ManualPage() {
           <div className="mt-12 p-6 rounded-2xl border border-gray-200 bg-gray-50 text-sm">
             <p className="font-bold text-gray-800 mb-3">Contacto del comité</p>
             <div className="grid sm:grid-cols-2 gap-2 text-gray-600">
-              <div><p className="font-semibold">CCOO</p><p>ccoo@fyg.ugr.es</p></div>
               <div><p className="font-semibold">UGT</p><p>ugt@fyg.ugr.es</p></div>
               <div className="sm:col-span-2"><p className="font-semibold">Dirección</p><p>Placeta del Hospicio Viejo, s/n — 18010 Granada</p></div>
               <div className="sm:col-span-2"><p className="font-semibold">Portal</p><p>comiteclm.com</p></div>
@@ -554,7 +553,7 @@ export default function ManualPage() {
           </div>
 
           <div className="mt-8 text-center text-xs text-gray-300 border-t pt-6">
-            <p>Comité de Empresa · Centro de Lenguas Modernas · Universidad de Granada</p>
+            <p>Sección Sindical UGT · Centro de Lenguas Modernas · Universidad de Granada</p>
             <p>Manual de uso v1.0 — junio 2026 · Documento de uso interno</p>
             <p className="mt-1">Desarrollo web: <a href="https://www.por2duros.com" className="underline hover:text-gray-500">Por 2 duros</a></p>
           </div>
