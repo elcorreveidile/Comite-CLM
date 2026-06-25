@@ -2,13 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
 import { SUPER_ADMINS } from '@/lib/admins'
 import { escapeHtml } from '@/lib/html'
 import { revalidatePath } from 'next/cache'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const BUCKET = 'comunicados-adjuntos'
+const BREVO_API = 'https://api.brevo.com/v3/smtp/email'
+const FROM_NAME = 'Comité CLM · UGT'
+const FROM_EMAIL = 'no-reply@comiteclm.com'
 
 function adminDb() {
   return createAdminClient(
@@ -150,34 +151,50 @@ async function enviarEmails(
       </p>
     </div>`
 
-  const extraOpts = attachments?.length ? { attachments } : {}
+  const apiKey = process.env.BREVO_API_KEY
+  if (!apiKey) return { ok: false, error: 'BREVO_API_KEY no configurada.' }
+
+  const brevoAttachments = attachments?.length
+    ? attachments.map(a => ({ name: a.filename, content: a.content.toString('base64') }))
+    : undefined
+
+  const sender = { name: FROM_NAME, email: FROM_EMAIL }
+
+  const sendBrevo = async (body: object) => {
+    const res = await fetch(BREVO_API, {
+      method: 'POST',
+      headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      return { error: err.message ?? res.statusText }
+    }
+    return {}
+  }
 
   if (emails.length === 1) {
-    const { error: resendErr } = await resend.emails.send({
-      from: 'Comité CLM · UGT <no-reply@comiteclm.com>',
-      to:   emails[0],
-      subject: asunto,
-      html: htmlBody,
-      ...extraOpts,
-    })
-    if (resendErr) return { ok: false, error: `Error Resend: ${resendErr.message}` }
+    const body: Record<string, unknown> = { sender, to: [{ email: emails[0] }], subject: asunto, htmlContent: htmlBody }
+    if (brevoAttachments) body.attachment = brevoAttachments
+    const { error: err } = await sendBrevo(body)
+    if (err) return { ok: false, error: `Error Brevo: ${err}` }
     return { ok: true, count: 1 }
   }
 
-  // Resend allows max 50 recipients per call (to + bcc combined).
-  // We use 1 slot for the `to` field, so BCC chunks stay at 49.
-  const CHUNK = 49
+  // Brevo allows up to 99 BCC recipients per call
+  const CHUNK = 98
   for (let i = 0; i < emails.length; i += CHUNK) {
     const chunk = emails.slice(i, i + CHUNK)
-    const { error: resendErr } = await resend.emails.send({
-      from: 'Comité CLM · UGT <no-reply@comiteclm.com>',
-      to:   'no-reply@comiteclm.com',
-      bcc:  chunk,
+    const body: Record<string, unknown> = {
+      sender,
+      to: [{ email: FROM_EMAIL }],
+      bcc: chunk.map(email => ({ email })),
       subject: asunto,
-      html: htmlBody,
-      ...extraOpts,
-    })
-    if (resendErr) return { ok: false, error: `Error Resend (lote ${Math.floor(i / CHUNK) + 1}): ${resendErr.message}` }
+      htmlContent: htmlBody,
+    }
+    if (brevoAttachments) body.attachment = brevoAttachments
+    const { error: err } = await sendBrevo(body)
+    if (err) return { ok: false, error: `Error Brevo (lote ${Math.floor(i / CHUNK) + 1}): ${err}` }
   }
 
   return { ok: true, count: emails.length }

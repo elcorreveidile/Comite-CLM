@@ -40,6 +40,6 @@ export async function enviarOtpAdmin(
     options: { emailRedirectTo: `${origin}/auth/callback?next=/admin` },
   })
 
-  if (error) return { ok: false, error: `Error Supabase: ${error.message}` }
+  if (error) return { ok: false, error: 'Error al enviar el enlace. Inténtalo de nuevo.' }
   return { ok: true }
 }
