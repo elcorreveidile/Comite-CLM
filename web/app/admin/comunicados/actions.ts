@@ -1,5 +1,7 @@
 'use server'
 
+export const maxDuration = 60
+
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
