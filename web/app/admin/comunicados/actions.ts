@@ -154,7 +154,7 @@ async function enviarEmails(
 
   if (emails.length === 1) {
     const { error: resendErr } = await resend.emails.send({
-      from: 'Comité CLM <no-reply@comiteclm.com>',
+      from: 'Comité CLM · UGT <no-reply@comiteclm.com>',
       to:   emails[0],
       subject: asunto,
       html: htmlBody,
@@ -170,7 +170,7 @@ async function enviarEmails(
   for (let i = 0; i < emails.length; i += CHUNK) {
     const chunk = emails.slice(i, i + CHUNK)
     const { error: resendErr } = await resend.emails.send({
-      from: 'Comité CLM <no-reply@comiteclm.com>',
+      from: 'Comité CLM · UGT <no-reply@comiteclm.com>',
       to:   'no-reply@comiteclm.com',
       bcc:  chunk,
       subject: asunto,
