@@ -160,11 +160,13 @@ async function enviarEmails(
       html: htmlBody,
       ...extraOpts,
     })
-    if (resendErr) return { ok: false, error: 'Error al enviar el comunicado. Contacta con soporte.' }
+    if (resendErr) return { ok: false, error: `Error Resend: ${resendErr.message}` }
     return { ok: true, count: 1 }
   }
 
-  const CHUNK = 50
+  // Resend allows max 50 recipients per call (to + bcc combined).
+  // We use 1 slot for the `to` field, so BCC chunks stay at 49.
+  const CHUNK = 49
   for (let i = 0; i < emails.length; i += CHUNK) {
     const chunk = emails.slice(i, i + CHUNK)
     const { error: resendErr } = await resend.emails.send({
@@ -175,7 +177,7 @@ async function enviarEmails(
       html: htmlBody,
       ...extraOpts,
     })
-    if (resendErr) return { ok: false, error: 'Error al enviar el comunicado. Contacta con soporte.' }
+    if (resendErr) return { ok: false, error: `Error Resend (lote ${Math.floor(i / CHUNK) + 1}): ${resendErr.message}` }
   }
 
   return { ok: true, count: emails.length }
