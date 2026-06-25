@@ -386,17 +386,17 @@ function AdjuntosInput({
   )
 }
 
-function getMinDatetime() {
-  const d = new Date(Date.now() + 5 * 60 * 1000)
-  return d.toISOString().slice(0, 16)
+function getMinDate() {
+  return new Date().toISOString().slice(0, 10)
 }
 
 function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores: Trabajador[] }) {
-  const [estado, setEstado]       = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
-  const [msg, setMsg]             = useState('')
-  const [tipo, setTipo]           = useState<DestinatarioTipo>('todos')
-  const [adjuntos, setAdjuntos]   = useState<File[]>([])
-  const [programadoAt, setProgramadoAt] = useState('')
+  const [estado, setEstado]             = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
+  const [msg, setMsg]                   = useState('')
+  const [tipo, setTipo]                 = useState<DestinatarioTipo>('todos')
+  const [adjuntos, setAdjuntos]         = useState<File[]>([])
+  const [programadoFecha, setProgramadoFecha] = useState('')
+  const [programadoHora, setProgramadoHora]   = useState('')
 
   const canSendDirect = role === 'superadmin' || role === 'presidenta'
 
@@ -414,6 +414,9 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
       return
     }
     adjuntos.forEach(f => data.append('adjuntos', f))
+    if (programadoFecha && programadoHora) {
+      data.set('programado_at', `${programadoFecha}T${programadoHora}`)
+    }
 
     setEstado('loading')
 
@@ -435,7 +438,8 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
       ;(e.target as HTMLFormElement).reset()
       setTipo('todos')
       setAdjuntos([])
-      setProgramadoAt('')
+      setProgramadoFecha('')
+      setProgramadoHora('')
     } else {
       setMsg(`❌ ${'error' in res ? res.error : 'Error inesperado.'}`)
       setEstado('error')
@@ -518,20 +522,34 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
           {canSendDirect && (
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Envío programado <span className="text-gray-400 font-normal">(opcional — déjalo vacío para enviar ahora)</span>
+                Envío programado <span className="text-gray-400 font-normal">(opcional)</span>
               </label>
-              <input
-                type="datetime-local"
-                name="programado_at"
-                value={programadoAt}
-                onChange={e => setProgramadoAt(e.target.value)}
-                min={getMinDatetime()}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
-              />
-              {programadoAt && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Día</label>
+                  <input
+                    type="date"
+                    value={programadoFecha}
+                    onChange={e => setProgramadoFecha(e.target.value)}
+                    min={getMinDate()}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Hora</label>
+                  <input
+                    type="time"
+                    value={programadoHora}
+                    onChange={e => setProgramadoHora(e.target.value)}
+                    step="300"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                  />
+                </div>
+              </div>
+              {(programadoFecha || programadoHora) && (
                 <button
                   type="button"
-                  onClick={() => setProgramadoAt('')}
+                  onClick={() => { setProgramadoFecha(''); setProgramadoHora('') }}
                   className="text-xs text-gray-400 hover:text-gray-600 mt-1"
                 >
                   Enviar inmediatamente
@@ -551,7 +569,7 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
             {estado === 'loading'
               ? 'Procesando…'
               : canSendDirect
-                ? programadoAt
+                ? (programadoFecha && programadoHora)
                   ? '🕒 Programar envío'
                   : tipo === 'todos'        ? '📨 Enviar a todos los trabajadores'
                   : tipo === 'comite'       ? '📨 Enviar a los miembros del comité'
