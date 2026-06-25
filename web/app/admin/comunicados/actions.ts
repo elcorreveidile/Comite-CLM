@@ -161,16 +161,25 @@ async function enviarEmails(
   const sender = { name: FROM_NAME, email: FROM_EMAIL }
 
   const sendBrevo = async (body: object) => {
-    const res = await fetch(BREVO_API, {
-      method: 'POST',
-      headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      return { error: err.message ?? res.statusText }
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 20000)
+    try {
+      const res = await fetch(BREVO_API, {
+        method: 'POST',
+        headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      })
+      clearTimeout(timer)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        return { error: err.message ?? res.statusText }
+      }
+      return {}
+    } catch (e: any) {
+      clearTimeout(timer)
+      return { error: e.name === 'AbortError' ? 'Timeout al contactar con Brevo.' : e.message }
     }
-    return {}
   }
 
   if (emails.length === 1) {
