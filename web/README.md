@@ -2,7 +2,7 @@
 
 Web oficial de la Sección Sindical UGT del Centro de Lenguas Modernas (CLM) de la Universidad de Granada.
 
-**Versión:** v1.1  
+**Versión:** v1.2  
 **URL:** https://ugt.comiteclm.com  
 **Stack:** Next.js · Supabase · Brevo · Vercel
 
@@ -17,6 +17,15 @@ Web oficial de la Sección Sindical UGT del Centro de Lenguas Modernas (CLM) de 
 ### Panel del trabajador (`/panel`)
 - Login con email/contraseña
 - Gestión del perfil y preferencias de comunicados
+
+| Sección | Descripción |
+|---|---|
+| Comunicados | Comunicados enviados por el comité, filtrados por destinatario con indicador de leído |
+| Avisos | Tablón de avisos publicados por el comité |
+| Votaciones | Consultas abiertas a los trabajadores |
+| Propuestas | Buzón para enviar propuestas al comité |
+| Documentos | Repositorio de documentos descargables |
+| Calendario | Próximas fechas y reuniones |
 
 ### Panel de administración (`/admin`)
 Acceso restringido por roles: **Superadmin**, **Presidenta**, **Secretaria**
@@ -35,11 +44,13 @@ Acceso restringido por roles: **Superadmin**, **Presidenta**, **Secretaria**
 
 #### Comunicados — detalle
 - Envío inmediato o programado (cron cada 5 min)
+- Botón "⚡ Procesar ahora" para disparar el cron manualmente desde el panel
 - Destinatarios: todos, comité, departamento o trabajadores específicos
 - Adjuntos hasta 20 MB (Supabase Storage)
 - Plantillas reutilizables
-- Historial de lecturas por trabajador (pixel de seguimiento)
+- Historial de lecturas por trabajador (pixel de seguimiento 1×1 GIF)
 - Flujo de aprobación: Secretaria redacta → Presidenta aprueba y envía
+- Los trabajadores ven sus comunicados en `/panel/comunicados` con indicador de leído
 
 ---
 
@@ -50,9 +61,11 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 BREVO_API_KEY=
-CRON_SECRET=                      # auto-inyectado por Vercel
+CRON_SECRET=                      # debe configurarse en Vercel → Settings → Environment Variables
 NEXT_PUBLIC_SITE_URL=https://ugt.comiteclm.com
 ```
+
+> **Nota sobre `CRON_SECRET`:** Vercel requiere que esta variable exista en el proyecto para autenticar las llamadas al cron. Si el cron devuelve 401, añadir manualmente la variable en el dashboard de Vercel con un valor aleatorio seguro.
 
 ---
 
