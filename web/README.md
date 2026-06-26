@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Comité CLM · Sección Sindical UGT
 
-## Getting Started
+Web oficial de la Sección Sindical UGT del Centro de Lenguas Modernas (CLM) de la Universidad de Granada.
 
-First, run the development server:
+**Versión:** v1.1  
+**URL:** https://ugt.comiteclm.com  
+**Stack:** Next.js · Supabase · Brevo · Vercel
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Funcionalidades
+
+### Web pública
+- Página de inicio con información del comité
+- Aviso legal, política de privacidad y cookies
+
+### Panel del trabajador (`/panel`)
+- Login con email/contraseña
+- Gestión del perfil y preferencias de comunicados
+
+### Panel de administración (`/admin`)
+Acceso restringido por roles: **Superadmin**, **Presidenta**, **Secretaria**
+
+| Sección | Descripción |
+|---|---|
+| Comunicados | Redacción, envío y seguimiento de emails masivos |
+| Trabajadores | CRUD de la plantilla con soporte para departamentos |
+| Miembros del comité | Gestión de los miembros y sus cargos |
+| Avisos | Avisos visibles en el panel del trabajador |
+| Votaciones | Creación y seguimiento de votaciones internas |
+| Propuestas | Buzón de propuestas de los trabajadores |
+| Documentos | Repositorio de documentos descargables |
+| Calendario | Eventos y reuniones del comité |
+| Intentos de acceso | Log de intentos de login a rutas protegidas |
+
+#### Comunicados — detalle
+- Envío inmediato o programado (cron cada 5 min)
+- Destinatarios: todos, comité, departamento o trabajadores específicos
+- Adjuntos hasta 20 MB (Supabase Storage)
+- Plantillas reutilizables
+- Historial de lecturas por trabajador (pixel de seguimiento)
+- Flujo de aprobación: Secretaria redacta → Presidenta aprueba y envía
+
+---
+
+## Variables de entorno
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+BREVO_API_KEY=
+CRON_SECRET=                      # auto-inyectado por Vercel
+NEXT_PUBLIC_SITE_URL=https://ugt.comiteclm.com
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Base de datos (Supabase)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tablas principales:
 
-## Learn More
+| Tabla | Descripción |
+|---|---|
+| `trabajadores` | Plantilla de personal |
+| `miembros_comite` | Miembros del comité con cargo y rol |
+| `comunicados` | Comunicados con estado y metadatos de envío |
+| `plantillas_comunicado` | Plantillas reutilizables para comunicados |
+| `comunicado_lecturas` | Registro de aperturas por email (pixel tracking) |
+| `avisos` | Avisos visibles en el panel del trabajador |
+| `votaciones` | Votaciones internas |
+| `propuestas` | Propuestas de trabajadores |
+| `documentos` | Documentos descargables |
+| `eventos_calendario` | Eventos del calendario |
+| `login_intentos` | Log de intentos de acceso sospechosos |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Desarrollo local
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cd web
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Abre http://localhost:3000
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Despliegue
+
+El proyecto se despliega automáticamente en Vercel al mergear a `main`.  
+El cron `/api/cron/enviar-programados` se ejecuta cada 5 minutos para procesar envíos programados.
