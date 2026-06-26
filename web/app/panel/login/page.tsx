@@ -32,7 +32,7 @@ export default function PanelLoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <p className="text-2xl font-bold mb-1" style={{ color: '#003087' }}>Panel de trabajadores</p>
-          <p className="text-gray-400 text-xs">Centro de Lenguas Modernas · UGR</p>
+          <p className="text-gray-400 text-xs">Comité CLM · Sección Sindical UGT</p>
         </div>
 
         {sent ? (
