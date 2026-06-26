@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado, cancelarProgramado } from './actions'
+import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado, cancelarProgramado, editarProgramado } from './actions'
 import type { Adjunto } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
@@ -43,6 +43,14 @@ function Badge({ estado }: { estado: Comunicado['estado'] }) {
   )
 }
 
+function toLocalDateTimeInputs(isoStr: string) {
+  const d = new Date(isoStr)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const fecha = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  const hora  = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return { fecha, hora }
+}
+
 function ComunicadoCard({ com, role, enHistorial, esProgramado }: { com: Comunicado; role: Role; enHistorial?: boolean; esProgramado?: boolean }) {
   const [loading, setLoading]       = useState(false)
   const [deleting, setDeleting]     = useState(false)
@@ -50,9 +58,15 @@ function ComunicadoCard({ com, role, enHistorial, esProgramado }: { com: Comunic
   const [msg, setMsg]               = useState('')
   const [eliminado, setEliminado]   = useState(false)
   const [expanded, setExpanded]     = useState(false)
+  const [editing, setEditing]       = useState(false)
+
+  const initEdit = com.programado_at ? toLocalDateTimeInputs(com.programado_at) : { fecha: '', hora: '' }
+  const [editFecha, setEditFecha]   = useState(initEdit.fecha)
+  const [editHora, setEditHora]     = useState(initEdit.hora)
 
   const canApprove = (role === 'presidenta' || role === 'superadmin') && com.estado === 'pendiente_aprobacion'
   const canDelete  = (role === 'presidenta' || role === 'superadmin') && (enHistorial || esProgramado)
+  const canEdit    = (role === 'presidenta' || role === 'superadmin') && esProgramado
   const adjuntos   = com.adjuntos ?? []
 
   async function handleAprobar() {
@@ -82,7 +96,93 @@ function ComunicadoCard({ com, role, enHistorial, esProgramado }: { com: Comunic
     }
   }
 
+  async function handleEditar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    if (editFecha && editHora) {
+      const localDate = new Date(`${editFecha}T${editHora}`)
+      formData.set('programado_at', localDate.toISOString())
+    }
+    setLoading(true)
+    const res = await editarProgramado(com.id, formData)
+    if (res.ok) {
+      setMsg(`✅ Actualizado`)
+      setEditing(false)
+    } else {
+      setMsg(`❌ ${'error' in res ? res.error : 'Error inesperado.'}`)
+    }
+    setLoading(false)
+  }
+
   if (eliminado) return null
+
+  if (editing) {
+    return (
+      <div className="bg-white border border-blue-200 rounded-xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <p className="font-semibold text-gray-800 text-sm">Editar envío programado</p>
+          <button onClick={() => { setEditing(false); setMsg('') }} className="text-gray-400 hover:text-gray-600 text-xs">Cancelar</button>
+        </div>
+        <form onSubmit={handleEditar} className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Asunto *</label>
+            <input
+              name="asunto"
+              required
+              defaultValue={com.asunto}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Mensaje *</label>
+            <textarea
+              name="cuerpo"
+              required
+              rows={6}
+              defaultValue={com.cuerpo}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 resize-y"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Fecha y hora de envío *</label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Día</label>
+                <input
+                  type="date"
+                  value={editFecha}
+                  onChange={e => setEditFecha(e.target.value)}
+                  min={new Date().toISOString().slice(0, 10)}
+                  required
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Hora</label>
+                <input
+                  type="time"
+                  value={editHora}
+                  onChange={e => setEditHora(e.target.value)}
+                  step="300"
+                  required
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30"
+                />
+              </div>
+            </div>
+          </div>
+          {msg && <p className="text-sm font-medium">{msg}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full text-white py-2 rounded-lg font-medium text-sm hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: '#003087' }}
+          >
+            {loading ? 'Guardando…' : '💾 Guardar cambios'}
+          </button>
+        </form>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
@@ -90,6 +190,14 @@ function ComunicadoCard({ com, role, enHistorial, esProgramado }: { com: Comunic
         <p className="font-semibold text-gray-800">{com.asunto}</p>
         <div className="flex items-center gap-2 shrink-0">
           <Badge estado={com.estado} />
+          {canEdit && !confirmDel && (
+            <button
+              onClick={() => { setEditing(true); setMsg('') }}
+              className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-2 py-0.5 transition-colors"
+            >
+              Editar
+            </button>
+          )}
           {canDelete && !confirmDel && (
             <button
               onClick={() => setConfirmDel(true)}
@@ -415,7 +523,8 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
     }
     adjuntos.forEach(f => data.append('adjuntos', f))
     if (programadoFecha && programadoHora) {
-      data.set('programado_at', `${programadoFecha}T${programadoHora}`)
+      const localDate = new Date(`${programadoFecha}T${programadoHora}`)
+      data.set('programado_at', localDate.toISOString())
     }
 
     setEstado('loading')
