@@ -60,12 +60,13 @@ export default async function PanelLayout({ children }: { children: React.ReactN
 
             {/* Desktop nav links */}
             <div className="hidden sm:flex items-center gap-1 text-sm">
-              <Link href="/panel"            className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Inicio</Link>
-              <Link href="/panel/avisos"     className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Avisos</Link>
-              <Link href="/panel/votaciones" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Votaciones</Link>
-              <Link href="/panel/calendario" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Calendario</Link>
-              <Link href="/panel/propuestas" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Propuestas</Link>
-              <Link href="/panel/documentos" className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Documentos</Link>
+              <Link href="/panel"                className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Inicio</Link>
+              <Link href="/panel/comunicados"   className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Comunicados</Link>
+              <Link href="/panel/avisos"        className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Avisos</Link>
+              <Link href="/panel/votaciones"    className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Votaciones</Link>
+              <Link href="/panel/propuestas"    className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Propuestas</Link>
+              <Link href="/panel/documentos"    className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Documentos</Link>
+              <Link href="/panel/calendario"    className="px-3 py-1.5 rounded text-gray-600 hover:bg-gray-100 transition-colors">Calendario</Link>
             </div>
 
             <div className="flex items-center gap-3">
