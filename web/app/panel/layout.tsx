@@ -83,6 +83,16 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         {children}
       </main>
 
+      <footer className="border-t py-3 px-4">
+        <p className="text-center text-xs text-gray-300 pb-16 sm:pb-0">
+          Desarrollo web:{' '}
+          <a href="https://www.por2duros.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-500 transition-colors underline underline-offset-2">
+            Por 2 duros
+          </a>
+          {' · '}v1.1
+        </p>
+      </footer>
+
       {/* Bottom nav — solo en móvil */}
       <PanelBottomNav onSignOut={signOut} />
     </div>
