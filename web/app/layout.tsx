@@ -5,11 +5,6 @@ export const metadata: Metadata = {
   title: 'Comité CLM · Sección Sindical UGT',
   description: 'Plataforma de comunicación de la Sección Sindical de UGT del Centro de Lenguas Modernas de la Universidad de Granada.',
   themeColor: '#003087',
-  icons: {
-    icon: '/icon.svg',
-    shortcut: '/icon.svg',
-    apple: '/icon.svg',
-  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
