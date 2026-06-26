@@ -7,6 +7,8 @@ const SITE_URL   = process.env.NEXT_PUBLIC_SITE_URL || 'https://ugt.comiteclm.co
 
 const sender = { name: FROM_NAME, email: FROM_EMAIL }
 
+const PROFILE_URL = 'https://ugt.comiteclm.com/panel/perfil'
+
 export function buildHtmlBody(cuerpo: string, trackingUrl?: string): string {
   return `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
@@ -20,9 +22,9 @@ export function buildHtmlBody(cuerpo: string, trackingUrl?: string): string {
         Sección Sindical UGT · Centro de Lenguas Modernas · Universidad de Granada
       </p>
       <p style="color:#d1d5db;font-size:11px;margin-top:4px;text-align:center">
-        ¿No deseas recibir estos comunicados?
-        <a href="https://ugt.comiteclm.com/panel/perfil" style="color:#d1d5db">Accede a tu perfil</a>
-        para darte de baja.
+        <a href="%%UNSUB%%" style="color:#d1d5db">Cancelar suscripción</a>
+        &nbsp;·&nbsp;
+        <a href="${PROFILE_URL}" style="color:#d1d5db">Gestionar preferencias</a>
       </p>
       ${trackingUrl ? `<img src="${trackingUrl}" width="1" height="1" style="display:none" alt="" />` : ''}
     </div>`
@@ -78,17 +80,20 @@ export async function sendBrevoBulk(
       const batch = emails.slice(i, i + CONCURRENCY)
       const results = await Promise.allSettled(
         batch.map(async (email) => {
-          const trackingUrl = `${SITE_URL}/api/track/read?c=${comunicadoId}&e=${Buffer.from(email).toString('base64url')}`
+          const encoded = Buffer.from(email).toString('base64url')
+          const trackingUrl = `${SITE_URL}/api/track/read?c=${comunicadoId}&e=${encoded}`
+          const unsubUrl   = `${SITE_URL}/api/unsub?e=${encoded}`
           const pixel = `<img src="${trackingUrl}" width="1" height="1" style="display:none" alt="" />`
           const lastDiv = htmlContent.lastIndexOf('</div>')
           const htmlWithPixel = lastDiv >= 0
             ? htmlContent.slice(0, lastDiv) + pixel + htmlContent.slice(lastDiv)
             : htmlContent + pixel
+          const htmlFinal = htmlWithPixel.replace('%%UNSUB%%', unsubUrl)
           const body: Record<string, unknown> = {
             sender,
             to: [{ email }],
             subject: asunto,
-            htmlContent: htmlWithPixel,
+            htmlContent: htmlFinal,
           }
           if (brevoAttachments) body.attachment = brevoAttachments
           return callBrevo(body)
@@ -107,13 +112,15 @@ export async function sendBrevoBulk(
     return { ok: true, count: sent }
   }
 
-  // Sin comunicadoId: BCC por lotes (comportamiento original)
+  // Sin comunicadoId: BCC por lotes — reemplaza placeholder con URL de perfil genérica
+  const htmlBcc = htmlContent.replace('%%UNSUB%%', PROFILE_URL)
+
   if (emails.length === 1) {
     const body: Record<string, unknown> = {
       sender,
       to: [{ email: emails[0] }],
       subject: asunto,
-      htmlContent,
+      htmlContent: htmlBcc,
     }
     if (brevoAttachments) body.attachment = brevoAttachments
     const { error } = await callBrevo(body)
@@ -129,7 +136,7 @@ export async function sendBrevoBulk(
       to: [{ email: FROM_EMAIL }],
       bcc: chunk.map(email => ({ email })),
       subject: asunto,
-      htmlContent,
+      htmlContent: htmlBcc,
     }
     if (brevoAttachments) body.attachment = brevoAttachments
     const { error } = await callBrevo(body)
