@@ -374,6 +374,59 @@ export async function eliminarPlantilla(id: string) {
   return { ok: true }
 }
 
+// ── Procesar programados manualmente (Presidenta o Super Admin) ───────────────
+export async function procesarProgramados() {
+  const email = await getCurrentEmail()
+  if (!email) return { ok: false as const, error: 'No autenticado.' }
+
+  const role = await getRole(email)
+  if (role !== 'superadmin' && role !== 'presidenta')
+    return { ok: false as const, error: 'No autorizado.' }
+
+  const now = new Date().toISOString()
+  const { data: pendientes, error } = await adminDb()
+    .from('comunicados')
+    .select('id, asunto, cuerpo, adjuntos, destinatario_tipo, destinatario_emails, destinatario_departamento')
+    .eq('estado', 'programado')
+    .lte('programado_at', now)
+
+  if (error) return { ok: false as const, error: error.message }
+  if (!pendientes?.length) return { ok: true as const, sent: 0, total: 0 }
+
+  const db = adminDb()
+  let sent = 0
+
+  for (const com of pendientes) {
+    try {
+      const tipo = (com.destinatario_tipo ?? 'todos') as DestinatarioTipo
+      const { emails, error: emailError } = await resolverEmails(
+        tipo,
+        com.destinatario_emails ?? undefined,
+        com.destinatario_departamento ?? undefined,
+      )
+      if (emailError || !emails.length) {
+        await db.from('comunicados').update({ estado: 'rechazado' }).eq('id', com.id)
+        continue
+      }
+      const adjuntos = (com.adjuntos ?? []) as Adjunto[]
+      const emailAttachments = adjuntos.length > 0 ? await descargarAdjuntos(adjuntos) : undefined
+      const result = await sendBrevoBulk(emails, com.asunto, buildHtmlBody(com.cuerpo), emailAttachments, com.id)
+      if (result.ok) {
+        await db.from('comunicados').update({
+          estado: 'enviado',
+          aprobado_por: email,
+          enviado_at: new Date().toISOString(),
+          destinatarios_count: result.count,
+        }).eq('id', com.id)
+        sent++
+      }
+    } catch {}
+  }
+
+  revalidatePath('/admin/comunicados')
+  return { ok: true as const, sent, total: pendientes.length }
+}
+
 // ── Rechazar (Presidenta o Super Admin) ───────────────────────────────────────
 export async function rechazar(id: string) {
   const email = await getCurrentEmail()
