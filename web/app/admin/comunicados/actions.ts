@@ -262,6 +262,43 @@ export async function aprobarYEnviar(id: string) {
   return { ok: true, count: result.count }
 }
 
+// ── Editar programado (Presidenta o Super Admin) ─────────────────────────────
+export async function editarProgramado(id: string, formData: FormData) {
+  const email = await getCurrentEmail()
+  if (!email) return { ok: false, error: 'No autenticado.' }
+
+  const role = await getRole(email)
+  if (role !== 'superadmin' && role !== 'presidenta')
+    return { ok: false, error: 'No autorizado.' }
+
+  const asunto          = String(formData.get('asunto')      ?? '').trim().slice(0, 300)
+  const cuerpo          = String(formData.get('cuerpo')      ?? '').trim().slice(0, 20000)
+  const programadoAtStr = String(formData.get('programado_at') ?? '').trim()
+
+  if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
+
+  let programadoAt: Date | null = null
+  if (programadoAtStr) {
+    const d = new Date(programadoAtStr)
+    if (!isNaN(d.getTime()) && d > new Date()) programadoAt = d
+  }
+  if (!programadoAt) return { ok: false, error: 'La fecha de envío debe ser en el futuro.' }
+
+  const { error: dbErr } = await adminDb()
+    .from('comunicados')
+    .update({ asunto, cuerpo, programado_at: programadoAt.toISOString() })
+    .eq('id', id)
+    .eq('estado', 'programado')
+
+  if (dbErr) {
+    console.error('[comunicados] DB update error:', dbErr)
+    return { ok: false, error: 'Error al actualizar el comunicado.' }
+  }
+
+  revalidatePath('/admin/comunicados')
+  return { ok: true, programadoAt: programadoAt.toISOString() }
+}
+
 // ── Cancelar programado (Presidenta o Super Admin) ────────────────────────────
 export async function cancelarProgramado(id: string) {
   const email = await getCurrentEmail()
