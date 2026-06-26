@@ -3,10 +3,11 @@ import { escapeHtml } from './html'
 const BREVO_API  = 'https://api.brevo.com/v3/smtp/email'
 const FROM_NAME  = 'Comité CLM · UGT'
 const FROM_EMAIL = 'no-reply@comiteclm.com'
+const SITE_URL   = process.env.NEXT_PUBLIC_SITE_URL || 'https://ugt.comiteclm.com'
 
 const sender = { name: FROM_NAME, email: FROM_EMAIL }
 
-export function buildHtmlBody(cuerpo: string): string {
+export function buildHtmlBody(cuerpo: string, trackingUrl?: string): string {
   return `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
       <div style="background:#003087;color:white;padding:16px 24px;border-radius:8px 8px 0 0">
@@ -20,9 +21,10 @@ export function buildHtmlBody(cuerpo: string): string {
       </p>
       <p style="color:#d1d5db;font-size:11px;margin-top:4px;text-align:center">
         ¿No deseas recibir estos comunicados?
-        <a href="https://comiteclm.com/panel/perfil" style="color:#d1d5db">Accede a tu perfil</a>
+        <a href="https://ugt.comiteclm.com/panel/perfil" style="color:#d1d5db">Accede a tu perfil</a>
         para darte de baja.
       </p>
+      ${trackingUrl ? `<img src="${trackingUrl}" width="1" height="1" style="display:none" alt="" />` : ''}
     </div>`
 }
 
@@ -58,6 +60,7 @@ export async function sendBrevoBulk(
   asunto: string,
   htmlContent: string,
   attachments?: EmailAttachment[],
+  comunicadoId?: string,
 ): Promise<{ ok: boolean; count?: number; error?: string }> {
   if (!emails.length) return { ok: false, error: 'Sin destinatarios.' }
 
@@ -65,6 +68,46 @@ export async function sendBrevoBulk(
     ? attachments.map(a => ({ name: a.filename, content: a.content.toString('base64') }))
     : undefined
 
+  // Si hay comunicadoId, enviamos individualmente para poder rastrear lecturas
+  if (comunicadoId) {
+    const CONCURRENCY = 10
+    let sent = 0
+    let lastError: string | undefined
+
+    for (let i = 0; i < emails.length; i += CONCURRENCY) {
+      const batch = emails.slice(i, i + CONCURRENCY)
+      const results = await Promise.allSettled(
+        batch.map(async (email) => {
+          const trackingUrl = `${SITE_URL}/api/track/read?c=${comunicadoId}&e=${Buffer.from(email).toString('base64url')}`
+          const pixel = `<img src="${trackingUrl}" width="1" height="1" style="display:none" alt="" />`
+          const lastDiv = htmlContent.lastIndexOf('</div>')
+          const htmlWithPixel = lastDiv >= 0
+            ? htmlContent.slice(0, lastDiv) + pixel + htmlContent.slice(lastDiv)
+            : htmlContent + pixel
+          const body: Record<string, unknown> = {
+            sender,
+            to: [{ email }],
+            subject: asunto,
+            htmlContent: htmlWithPixel,
+          }
+          if (brevoAttachments) body.attachment = brevoAttachments
+          return callBrevo(body)
+        })
+      )
+      for (const r of results) {
+        if (r.status === 'fulfilled' && !r.value.error) {
+          sent++
+        } else {
+          lastError = r.status === 'rejected' ? r.reason?.message : (r.value as any).error
+        }
+      }
+    }
+
+    if (sent === 0) return { ok: false, error: lastError || 'No se pudo enviar ningún email.' }
+    return { ok: true, count: sent }
+  }
+
+  // Sin comunicadoId: BCC por lotes (comportamiento original)
   if (emails.length === 1) {
     const body: Record<string, unknown> = {
       sender,

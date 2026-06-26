@@ -122,10 +122,11 @@ async function enviarEmails(
   emailsEspecificos?: string[],
   departamento?: string,
   attachments?: EmailAttachment[],
+  comunicadoId?: string,
 ): Promise<{ ok: boolean; count?: number; error?: string }> {
   const { emails, error } = await resolverEmails(tipo, emailsEspecificos, departamento)
   if (error || !emails.length) return { ok: false, error: error ?? 'Sin destinatarios.' }
-  return sendBrevoBulk(emails, asunto, buildHtmlBody(cuerpo), attachments)
+  return sendBrevoBulk(emails, asunto, buildHtmlBody(cuerpo), attachments, comunicadoId)
 }
 
 // ── Envío directo (Presidenta o Super Admin) ──────────────────────────────────
@@ -187,7 +188,7 @@ export async function crearYEnviar(formData: FormData) {
   }
 
   const emailAttachments = adjuntos.length > 0 ? await descargarAdjuntos(adjuntos) : undefined
-  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined, departamento, emailAttachments)
+  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined, departamento, emailAttachments, com.id)
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({
@@ -248,7 +249,7 @@ export async function aprobarYEnviar(id: string) {
   const adjuntos = (com.adjuntos ?? []) as Adjunto[]
   const emailAttachments = adjuntos.length > 0 ? await descargarAdjuntos(adjuntos) : undefined
 
-  const result = await enviarEmails(com.asunto, com.cuerpo, 'todos', undefined, undefined, emailAttachments)
+  const result = await enviarEmails(com.asunto, com.cuerpo, 'todos', undefined, undefined, emailAttachments, id)
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({
@@ -329,6 +330,46 @@ export async function eliminarComunicado(id: string) {
   if (com?.adjuntos?.length) await limpiarAdjuntos(com.adjuntos as Adjunto[])
 
   await adminDb().from('comunicados').delete().eq('id', id)
+  revalidatePath('/admin/comunicados')
+  return { ok: true }
+}
+
+// ── Plantillas ────────────────────────────────────────────────────────────────
+export type Plantilla = { id: string; nombre: string; asunto: string; cuerpo: string; creado_por: string; created_at: string }
+
+export async function listarPlantillas(): Promise<Plantilla[]> {
+  const { data } = await adminDb().from('plantillas_comunicado').select('*').order('nombre')
+  return (data ?? []) as Plantilla[]
+}
+
+export async function guardarPlantilla(formData: FormData) {
+  const email = await getCurrentEmail()
+  if (!email) return { ok: false, error: 'No autenticado.' }
+
+  const role = await getRole(email)
+  if (!role) return { ok: false, error: 'No autorizado.' }
+
+  const nombre = String(formData.get('nombre') ?? '').trim().slice(0, 100)
+  const asunto = String(formData.get('asunto') ?? '').trim().slice(0, 300)
+  const cuerpo = String(formData.get('cuerpo') ?? '').trim().slice(0, 20000)
+
+  if (!nombre || !asunto || !cuerpo) return { ok: false, error: 'Nombre, asunto y mensaje son obligatorios.' }
+
+  const { error } = await adminDb().from('plantillas_comunicado').insert({ nombre, asunto, cuerpo, creado_por: email })
+  if (error) return { ok: false, error: 'Error al guardar la plantilla.' }
+
+  revalidatePath('/admin/comunicados')
+  return { ok: true }
+}
+
+export async function eliminarPlantilla(id: string) {
+  const email = await getCurrentEmail()
+  if (!email) return { ok: false, error: 'No autenticado.' }
+
+  const role = await getRole(email)
+  if (!role) return { ok: false, error: 'No autorizado.' }
+
+  await adminDb().from('plantillas_comunicado').delete().eq('id', id)
   revalidatePath('/admin/comunicados')
   return { ok: true }
 }

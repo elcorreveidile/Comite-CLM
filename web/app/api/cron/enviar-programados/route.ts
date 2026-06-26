@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const result = await sendBrevoBulk(emails, com.asunto, buildHtmlBody(com.cuerpo), attachments.length ? attachments : undefined)
+      const result = await sendBrevoBulk(emails, com.asunto, buildHtmlBody(com.cuerpo), attachments.length ? attachments : undefined, com.id)
 
       if (result.ok) {
         await db.from('comunicados').update({
