@@ -98,6 +98,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </nav>
       <main className="max-w-7xl mx-auto px-4 py-6 md:py-8">{children}</main>
+      <footer className="border-t border-zinc-800 py-3 px-4 mt-4">
+        <p className="text-center text-xs text-zinc-600">
+          Desarrollo web:{' '}
+          <a href="https://www.por2duros.com" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-400 transition-colors underline underline-offset-2">
+            Por 2 duros
+          </a>
+          {' · '}v1.1
+        </p>
+      </footer>
     </div>
   )
 }
