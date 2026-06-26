@@ -5,16 +5,17 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
 const MAIN_ITEMS = [
-  { href: '/panel',            label: 'Inicio',    icon: '🏠' },
-  { href: '/panel/avisos',     label: 'Avisos',    icon: '📋' },
-  { href: '/panel/votaciones', label: 'Votar',     icon: '🗳️' },
-  { href: '/panel/propuestas', label: 'Proponer',  icon: '💬' },
+  { href: '/panel',               label: 'Inicio',        icon: '🏠' },
+  { href: '/panel/comunicados',   label: 'Comunicados',   icon: '📨' },
+  { href: '/panel/avisos',        label: 'Avisos',        icon: '📋' },
+  { href: '/panel/votaciones',    label: 'Votar',         icon: '🗳️' },
 ]
 
 const MORE_ITEMS = [
-  { href: '/panel/calendario', label: 'Calendario', icon: '📅' },
-  { href: '/panel/documentos', label: 'Documentos', icon: '📁' },
-  { href: '/panel/perfil',     label: 'Mi perfil',  icon: '👤' },
+  { href: '/panel/propuestas', label: 'Propuestas',  icon: '💬' },
+  { href: '/panel/calendario', label: 'Calendario',  icon: '📅' },
+  { href: '/panel/documentos', label: 'Documentos',  icon: '📁' },
+  { href: '/panel/perfil',     label: 'Mi perfil',   icon: '👤' },
 ]
 
 export default function PanelBottomNav({ onSignOut }: { onSignOut: () => void }) {
