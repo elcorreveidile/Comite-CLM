@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado, cancelarProgramado, editarProgramado } from './actions'
-import type { Adjunto } from './actions'
+import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado, cancelarProgramado, editarProgramado, guardarPlantilla, eliminarPlantilla } from './actions'
+import type { Adjunto, Plantilla } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
 type DestinatarioTipo = 'todos' | 'comite' | 'especifico' | 'departamento'
 
 type Trabajador = { id: string; nombre: string; email: string; departamento: string | null }
+
+type Lectura = { email: string; leido_at: string }
 
 type Comunicado = {
   id: string
@@ -21,6 +23,7 @@ type Comunicado = {
   programado_at: string | null
   created_at: string
   adjuntos: Adjunto[]
+  lecturas?: Lectura[]
 }
 
 function Badge({ estado }: { estado: Comunicado['estado'] }) {
@@ -245,10 +248,31 @@ function ComunicadoCard({ com, role, enHistorial, esProgramado }: { com: Comunic
           {new Date(com.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
           {' · '}{com.creado_por}
         </span>
-        {com.estado === 'enviado' && com.destinatarios_count && (
-          <span>{com.destinatarios_count} {com.destinatarios_count === 1 ? 'destinatario' : 'destinatarios'}</span>
-        )}
+        <div className="flex items-center gap-3">
+          {com.estado === 'enviado' && com.destinatarios_count != null && (
+            <span>{com.destinatarios_count} {com.destinatarios_count === 1 ? 'destinatario' : 'destinatarios'}</span>
+          )}
+          {com.estado === 'enviado' && com.lecturas != null && (
+            <span className="text-blue-500">
+              👁 {com.lecturas.length}{com.destinatarios_count ? ` / ${com.destinatarios_count}` : ''} {com.lecturas.length === 1 ? 'lectura' : 'lecturas'}
+            </span>
+          )}
+        </div>
       </div>
+
+      {com.estado === 'enviado' && com.lecturas && com.lecturas.length > 0 && expanded && (
+        <div className="mt-3 border-t border-gray-100 pt-3">
+          <p className="text-xs font-medium text-gray-500 mb-2">Leído por:</p>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {com.lecturas.map((l, i) => (
+              <div key={i} className="flex items-center justify-between text-xs text-gray-400">
+                <span>{l.email}</span>
+                <span>{new Date(l.leido_at).toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {msg && <p className="mt-3 text-sm font-medium">{msg}</p>}
 
@@ -498,13 +522,16 @@ function getMinDate() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores: Trabajador[] }) {
+function NuevoComunicadoForm({ role, trabajadores, plantillas }: { role: Role; trabajadores: Trabajador[]; plantillas: Plantilla[] }) {
   const [estado, setEstado]             = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [msg, setMsg]                   = useState('')
   const [tipo, setTipo]                 = useState<DestinatarioTipo>('todos')
   const [adjuntos, setAdjuntos]         = useState<File[]>([])
   const [programadoFecha, setProgramadoFecha] = useState('')
   const [programadoHora, setProgramadoHora]   = useState('')
+  const [guardandoPlantilla, setGuardandoPlantilla] = useState(false)
+  const [nombrePlantilla, setNombrePlantilla]       = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
 
   const canSendDirect = role === 'superadmin' || role === 'presidenta'
 
@@ -528,6 +555,8 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
     }
 
     setEstado('loading')
+    setGuardandoPlantilla(false)
+    setNombrePlantilla('')
 
     const res = canSendDirect ? await crearYEnviar(data) : await solicitarAprobacion(data)
 
@@ -544,7 +573,7 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
           : '✅ Solicitud enviada. La Presidenta recibirá el comunicado para aprobación.')
       }
       setEstado('ok')
-      ;(e.target as HTMLFormElement).reset()
+      formRef.current?.reset()
       setTipo('todos')
       setAdjuntos([])
       setProgramadoFecha('')
@@ -569,7 +598,31 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+
+          {plantillas.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Usar plantilla</label>
+              <select
+                defaultValue=""
+                onChange={e => {
+                  const p = plantillas.find(p => p.id === e.target.value)
+                  if (!p || !formRef.current) return
+                  const asuntoInput = formRef.current.elements.namedItem('asunto') as HTMLInputElement
+                  const cuerpoInput = formRef.current.elements.namedItem('cuerpo') as HTMLTextAreaElement
+                  if (asuntoInput) asuntoInput.value = p.asunto
+                  if (cuerpoInput) cuerpoInput.value = p.cuerpo
+                  e.target.value = ''
+                }}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/30 text-gray-500"
+              >
+                <option value="" disabled>Selecciona una plantilla…</option>
+                {plantillas.map(p => (
+                  <option key={p.id} value={p.id}>{p.nombre}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {canSendDirect && (
             <div>
@@ -667,6 +720,47 @@ function NuevoComunicadoForm({ role, trabajadores }: { role: Role; trabajadores:
             </div>
           )}
 
+          {guardandoPlantilla ? (
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+              <input
+                type="text"
+                value={nombrePlantilla}
+                onChange={e => setNombrePlantilla(e.target.value)}
+                placeholder="Nombre de la plantilla…"
+                className="flex-1 text-sm bg-transparent focus:outline-none"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!nombrePlantilla.trim() || !formRef.current) return
+                  const fd = new FormData(formRef.current)
+                  fd.set('nombre', nombrePlantilla.trim())
+                  const res = await guardarPlantilla(fd)
+                  if (res.ok) { setGuardandoPlantilla(false); setNombrePlantilla('') }
+                }}
+                className="text-xs font-medium text-white bg-gray-700 hover:bg-gray-900 px-3 py-1 rounded"
+              >
+                Guardar
+              </button>
+              <button
+                type="button"
+                onClick={() => { setGuardandoPlantilla(false); setNombrePlantilla('') }}
+                className="text-xs text-gray-400 hover:text-gray-600"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setGuardandoPlantilla(true)}
+              className="text-xs text-gray-400 hover:text-gray-600 underline"
+            >
+              Guardar como plantilla
+            </button>
+          )}
+
           {estado === 'error' && <p className="text-sm text-red-600">{msg}</p>}
 
           <button
@@ -704,18 +798,20 @@ export default function ComunicadosManager({
   programados,
   historial,
   trabajadores,
+  plantillas,
 }: {
   role: Role
   pendientes: Comunicado[]
   programados: Comunicado[]
   historial: Comunicado[]
   trabajadores: Trabajador[]
+  plantillas: Plantilla[]
 }) {
   const canApprove = role === 'presidenta' || role === 'superadmin'
 
   return (
     <div>
-      <NuevoComunicadoForm role={role} trabajadores={trabajadores} />
+      <NuevoComunicadoForm role={role} trabajadores={trabajadores} plantillas={plantillas} />
 
       {canApprove && pendientes.length > 0 && (
         <div className="mb-8">
