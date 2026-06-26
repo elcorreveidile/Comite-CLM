@@ -168,7 +168,10 @@ export async function crearYEnviar(formData: FormData) {
       programado_at: programadoAt?.toISOString() ?? null,
     })
     .select('id').single()
-  if (dbErr || !com) return { ok: false, error: 'Error al guardar el comunicado.' }
+  if (dbErr || !com) {
+    console.error('[comunicados] DB insert error:', dbErr)
+    return { ok: false, error: 'Error al guardar el comunicado.' }
+  }
 
   let adjuntos: Adjunto[] = []
   if (files.length > 0) {
