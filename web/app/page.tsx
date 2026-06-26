@@ -165,7 +165,7 @@ export default function Home() {
                 className="hover:text-gray-500 transition-colors underline underline-offset-2">
                 Por 2 duros
               </a>
-              {' · '}v1.0
+              {' · '}v1.1
             </p>
           </div>
           <div className="flex items-center gap-4">
