@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado, cancelarProgramado, editarProgramado, guardarPlantilla, eliminarPlantilla } from './actions'
+import { crearYEnviar, solicitarAprobacion, aprobarYEnviar, rechazar, eliminarComunicado, cancelarProgramado, editarProgramado, guardarPlantilla, eliminarPlantilla, procesarProgramados } from './actions'
 import type { Adjunto, Plantilla } from './actions'
 
 type Role = 'superadmin' | 'presidenta' | 'secretaria'
@@ -792,6 +792,38 @@ function NuevoComunicadoForm({ role, trabajadores, plantillas }: { role: Role; t
   )
 }
 
+function ProcesarBtn() {
+  const [loading, setLoading] = useState(false)
+  const [msg, setMsg]         = useState('')
+
+  async function handleClick() {
+    setLoading(true)
+    setMsg('')
+    const res = await procesarProgramados()
+    if (res.ok) {
+      setMsg(res.sent === 0
+        ? 'No hay envíos vencidos pendientes.'
+        : `✅ ${res.sent} de ${res.total} enviados correctamente.`)
+    } else {
+      setMsg(`❌ ${'error' in res ? res.error : 'Error inesperado.'}`)
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className="text-xs text-blue-700 border border-blue-200 hover:bg-blue-50 hover:border-blue-400 rounded px-3 py-1 transition-colors disabled:opacity-50"
+      >
+        {loading ? 'Procesando…' : '⚡ Procesar ahora'}
+      </button>
+      {msg && <span className="text-xs text-gray-500">{msg}</span>}
+    </div>
+  )
+}
+
 export default function ComunicadosManager({
   role,
   pendientes,
@@ -829,10 +861,13 @@ export default function ComunicadosManager({
 
       {canApprove && programados.length > 0 && (
         <div className="mb-8">
-          <h2 className="font-bold text-blue-700 mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 bg-blue-500 rounded-full" />
-            Envíos programados ({programados.length})
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-blue-700 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-500 rounded-full" />
+              Envíos programados ({programados.length})
+            </h2>
+            <ProcesarBtn />
+          </div>
           <div className="space-y-4">
             {programados.map(com => (
               <ComunicadoCard key={com.id} com={com} role={role} esProgramado />
