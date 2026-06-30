@@ -88,10 +88,12 @@ async function resolverEmails(
   tipo: DestinatarioTipo,
   emailsEspecificos?: string[],
   departamento?: string,
+  excluidos?: string[],
 ): Promise<{ emails: string[]; error?: string }> {
   if (tipo === 'todos') {
     const { data } = await adminDb().from('trabajadores').select('email').eq('baja_comunicados', false)
-    const emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
+    let emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
+    if (excluidos?.length) emails = emails.filter(e => !excluidos.includes(e))
     if (!emails.length) return { emails: [], error: 'No hay trabajadores activos registrados.' }
     return { emails }
   }
@@ -123,8 +125,9 @@ async function enviarEmails(
   departamento?: string,
   attachments?: EmailAttachment[],
   comunicadoId?: string,
+  excluidos?: string[],
 ): Promise<{ ok: boolean; count?: number; error?: string }> {
-  const { emails, error } = await resolverEmails(tipo, emailsEspecificos, departamento)
+  const { emails, error } = await resolverEmails(tipo, emailsEspecificos, departamento, excluidos)
   if (error || !emails.length) return { ok: false, error: error ?? 'Sin destinatarios.' }
   return sendBrevoBulk(emails, asunto, buildHtmlBody(cuerpo), attachments, comunicadoId)
 }
@@ -143,6 +146,9 @@ export async function crearYEnviar(formData: FormData) {
   const tipo              = String(formData.get('destinatario_tipo') ?? 'todos') as DestinatarioTipo
   const emailsEspecificos = formData.getAll('destinatario_email').map(v => String(v).trim()).filter(Boolean)
   const departamento      = String(formData.get('destinatario_departamento') ?? '').trim() || undefined
+  const excluidos         = tipo === 'todos'
+    ? formData.getAll('excluir_email').map(v => String(v).trim()).filter(Boolean)
+    : []
   const programadoAtStr   = String(formData.get('programado_at') ?? '').trim()
 
   if (!asunto || !cuerpo) return { ok: false, error: 'El asunto y el mensaje son obligatorios.' }
@@ -166,6 +172,7 @@ export async function crearYEnviar(formData: FormData) {
       destinatario_tipo: tipo,
       destinatario_emails: emailsEspecificos.length ? emailsEspecificos : null,
       destinatario_departamento: departamento ?? null,
+      destinatario_excluidos: excluidos.length ? excluidos : null,
       programado_at: programadoAt?.toISOString() ?? null,
     })
     .select('id').single()
@@ -188,7 +195,7 @@ export async function crearYEnviar(formData: FormData) {
   }
 
   const emailAttachments = adjuntos.length > 0 ? await descargarAdjuntos(adjuntos) : undefined
-  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined, departamento, emailAttachments, com.id)
+  const result = await enviarEmails(asunto, cuerpo, tipo, emailsEspecificos.length ? emailsEspecificos : undefined, departamento, emailAttachments, com.id, excluidos.length ? excluidos : undefined)
   if (!result.ok) return result
 
   await adminDb().from('comunicados').update({
@@ -386,7 +393,7 @@ export async function procesarProgramados() {
   const now = new Date().toISOString()
   const { data: pendientes, error } = await adminDb()
     .from('comunicados')
-    .select('id, asunto, cuerpo, adjuntos, destinatario_tipo, destinatario_emails, destinatario_departamento')
+    .select('id, asunto, cuerpo, adjuntos, destinatario_tipo, destinatario_emails, destinatario_departamento, destinatario_excluidos')
     .eq('estado', 'programado')
     .lte('programado_at', now)
 
@@ -403,6 +410,7 @@ export async function procesarProgramados() {
         tipo,
         com.destinatario_emails ?? undefined,
         com.destinatario_departamento ?? undefined,
+        com.destinatario_excluidos ?? undefined,
       )
       if (emailError || !emails.length) {
         await db.from('comunicados').update({ estado: 'rechazado' }).eq('id', com.id)

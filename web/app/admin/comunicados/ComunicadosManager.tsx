@@ -361,12 +361,22 @@ function SelectorDepartamento({ trabajadores }: { trabajadores: Trabajador[] }) 
   )
 }
 
-function BuscadorTrabajador({ trabajadores }: { trabajadores: Trabajador[] }) {
+function BuscadorTrabajador({ trabajadores, fieldName = 'destinatario_email', variant = 'blue' }: {
+  trabajadores: Trabajador[]
+  fieldName?: string
+  variant?: 'blue' | 'orange'
+}) {
   const [query, setQuery]       = useState('')
   const [open, setOpen]         = useState(false)
   const [selected, setSelected] = useState<Trabajador[]>([])
   const containerRef            = useRef<HTMLDivElement>(null)
   const inputRef                = useRef<HTMLInputElement>(null)
+  const tagCls = variant === 'orange'
+    ? 'bg-orange-100 text-orange-900'
+    : 'bg-blue-100 text-blue-900'
+  const tagBtnCls = variant === 'orange'
+    ? 'text-orange-400 hover:text-orange-700'
+    : 'text-blue-400 hover:text-blue-700'
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -398,18 +408,18 @@ function BuscadorTrabajador({ trabajadores }: { trabajadores: Trabajador[] }) {
   return (
     <div ref={containerRef} className="relative">
       {selected.map(t => (
-        <input key={t.id} type="hidden" name="destinatario_email" value={t.email} />
+        <input key={t.id} type="hidden" name={fieldName} value={t.email} />
       ))}
 
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
           {selected.map(t => (
-            <span key={t.id} className="inline-flex items-center gap-1 bg-blue-100 text-blue-900 text-xs px-2 py-1 rounded-full font-medium">
+            <span key={t.id} className={`inline-flex items-center gap-1 ${tagCls} text-xs px-2 py-1 rounded-full font-medium`}>
               {t.nombre}
               <button
                 type="button"
                 onClick={() => remove(t.id)}
-                className="text-blue-400 hover:text-blue-700 leading-none ml-0.5"
+                className={`${tagBtnCls} leading-none ml-0.5`}
               >×</button>
             </span>
           ))}
@@ -526,12 +536,18 @@ function NuevoComunicadoForm({ role, trabajadores, plantillas }: { role: Role; t
   const [estado, setEstado]             = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [msg, setMsg]                   = useState('')
   const [tipo, setTipo]                 = useState<DestinatarioTipo>('todos')
+  const [excluirAbierto, setExcluirAbierto] = useState(false)
   const [adjuntos, setAdjuntos]         = useState<File[]>([])
   const [programadoFecha, setProgramadoFecha] = useState('')
   const [programadoHora, setProgramadoHora]   = useState('')
   const [guardandoPlantilla, setGuardandoPlantilla] = useState(false)
   const [nombrePlantilla, setNombrePlantilla]       = useState('')
   const formRef = useRef<HTMLFormElement>(null)
+
+  function handleSetTipo(newTipo: DestinatarioTipo) {
+    setTipo(newTipo)
+    if (newTipo !== 'todos') setExcluirAbierto(false)
+  }
 
   const canSendDirect = role === 'superadmin' || role === 'presidenta'
 
@@ -575,6 +591,7 @@ function NuevoComunicadoForm({ role, trabajadores, plantillas }: { role: Role; t
       setEstado('ok')
       formRef.current?.reset()
       setTipo('todos')
+      setExcluirAbierto(false)
       setAdjuntos([])
       setProgramadoFecha('')
       setProgramadoHora('')
@@ -633,7 +650,7 @@ function NuevoComunicadoForm({ role, trabajadores, plantillas }: { role: Role; t
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setTipo(opt.value)}
+                    onClick={() => handleSetTipo(opt.value)}
                     className={`text-left px-3 py-2.5 rounded-lg border text-sm transition-colors ${
                       tipo === opt.value
                         ? 'border-blue-900 bg-blue-50 text-blue-900'
@@ -654,6 +671,34 @@ function NuevoComunicadoForm({ role, trabajadores, plantillas }: { role: Role; t
                 <div className="mt-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Buscar trabajador *</label>
                   <BuscadorTrabajador trabajadores={trabajadores} />
+                </div>
+              )}
+
+              {tipo === 'todos' && (
+                <div className="mt-3">
+                  {!excluirAbierto ? (
+                    <button
+                      type="button"
+                      onClick={() => setExcluirAbierto(true)}
+                      className="text-xs text-gray-400 hover:text-gray-600 underline"
+                    >
+                      Excluir algún trabajador (opcional)
+                    </button>
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-medium text-gray-600">Excluir trabajadores</label>
+                        <button
+                          type="button"
+                          onClick={() => setExcluirAbierto(false)}
+                          className="text-xs text-gray-400 hover:text-gray-600"
+                        >
+                          No excluir a nadie
+                        </button>
+                      </div>
+                      <BuscadorTrabajador trabajadores={trabajadores} fieldName="excluir_email" variant="orange" />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
