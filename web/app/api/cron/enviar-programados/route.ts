@@ -17,11 +17,14 @@ async function resolverEmails(
   tipo: DestinatarioTipo,
   emailsEspecificos?: string[] | null,
   departamento?: string | null,
+  excluidos?: string[] | null,
 ): Promise<string[]> {
   const db = adminDb()
   if (tipo === 'todos') {
     const { data } = await db.from('trabajadores').select('email').eq('baja_comunicados', false)
-    return (data ?? []).map((t: any) => t.email).filter(Boolean)
+    let emails = (data ?? []).map((t: any) => t.email).filter(Boolean) as string[]
+    if (excluidos?.length) emails = emails.filter(e => !excluidos.includes(e))
+    return emails
   }
   if (tipo === 'comite') {
     const { data } = await db.from('miembros_comite').select('email').eq('activo', true)
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest) {
   const now = new Date().toISOString()
   const { data: pendientes, error } = await adminDb()
     .from('comunicados')
-    .select('id, asunto, cuerpo, adjuntos, destinatario_tipo, destinatario_emails, destinatario_departamento')
+    .select('id, asunto, cuerpo, adjuntos, destinatario_tipo, destinatario_emails, destinatario_departamento, destinatario_excluidos')
     .eq('estado', 'programado')
     .lte('programado_at', now)
 
@@ -59,7 +62,7 @@ export async function GET(request: NextRequest) {
   for (const com of pendientes) {
     try {
       const tipo = (com.destinatario_tipo ?? 'todos') as DestinatarioTipo
-      const emails = await resolverEmails(tipo, com.destinatario_emails, com.destinatario_departamento)
+      const emails = await resolverEmails(tipo, com.destinatario_emails, com.destinatario_departamento, com.destinatario_excluidos)
 
       if (!emails.length) {
         await db.from('comunicados').update({ estado: 'rechazado' }).eq('id', com.id)
